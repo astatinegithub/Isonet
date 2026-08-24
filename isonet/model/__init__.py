@@ -5,3 +5,10 @@ from isonet.model.dmpnn import (
 )
 
 from isonet.model.train.pretrain_models import *
+
+
+# __all__ = [
+#     "DMPNN",
+#     "SSLModel",
+#     "IsonetModel"
+# ]

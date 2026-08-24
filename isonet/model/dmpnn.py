@@ -6,12 +6,6 @@ from torch_geometric.data import Data
 
 from isonet.data.dataset import MolGraph
 
-__all__ = [
-    "DMPNN",
-    "SSLModel",
-    "IsonetModel"
-]
-
 
 
 class DMPNN(MessagePassing):
@@ -87,40 +81,7 @@ class FeedForward(nn.Module):
 
     def forward(self, x):
         return self.layers(x)
-
-
-
-# class IsonetEncoder(nn.Module):
-#     def __init__(self, in_dim, depth, drop_rate=0.2):
-#         super().__init__()
-#         self.dmpnn = DMPNN(
-#             atom_dim=36,# 임시로 바꿈  # 방금 특성 넣어줌 나중에 수정해야 할듯 
-#             bond_dim=7,
-#             hidden_dim=in_dim,
-#             depth=depth
-#         )
-
-#         self.ffn = FeedForward(in_dim, drop_rate)
-
-
-#     def forward(self, data: Data):
-#         h = self.dmpnn(data)
-#         h = global_add_pool(h, data.batch)
-#         h = h + self.ffn(h)
-
-#         return h
-
-
-
-# class AtomHead(nn.Module):
-#     def __init__(self, hidden, out_dim):
-#         super().__init__()
-#         self.classifier = nn.Linear(hidden, out_dim)
-
-#     def forward(self, x):
-#         x = self.classifier(x)
-#         return x
-
+    
 
 
 class BondHead(nn.Module):
@@ -165,7 +126,9 @@ class ADMETHead(nn.Module):
 
 
 class SSLModel(nn.Module):
-    def __init__(self, atom_dim, bond_dim, hidden_dim, num_atom_types, depth):
+    def __init__(self, atom_dim, bond_dim, 
+                 atom_types, bond_types,
+                 hidden_dim, depth):
         super().__init__()
 
         self.encoder = DMPNN(
@@ -175,20 +138,20 @@ class SSLModel(nn.Module):
             depth
         )
 
-        self.head = nn.Linear(
-            hidden_dim,
-            num_atom_types
-        )
+        self.atom_head = nn.Linear(hidden_dim, atom_types)
+        self.bond_head = nn.Linear(hidden_dim, bond_types)
 
 
     def forward(self, data: MolGraph):
         h = self.encoder(data)
 
-        # mask된 atom만 예측
+        # mask된 bond/atom만 예측
         h_mask = h[data.mask_idx]
-        out = self.head(h_mask)
-        return out
+        atom_logits = self.atom_head(h_mask) 
+        bond_logits = self.bond_head(h_mask) 
+        return atom_logits, bond_logits # 그냥 둘다 넣어뒀는데 이게 맞나? 
 
+ 
 
 class IsonetModel(nn.Module):
     def __init__(self, atom_dim: int, bond_dim: int, 
@@ -218,4 +181,3 @@ class IsonetModel(nn.Module):
         logits = self.head(h)
 
         return logits
-    

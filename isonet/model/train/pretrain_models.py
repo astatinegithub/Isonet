@@ -24,6 +24,7 @@ batch_size = 64
 epochs = 10
 lr = 1e-3
 
+
 # dataset
 graphs = torch.load(graph_path, weights_only=False)
 
@@ -41,10 +42,10 @@ train_loader = DataLoader(
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = SSLModel(
-    atom_dim=36,      # atom feature 차원
-    bond_dim=7,        # bond feature 차원
-    hidden_dim=256,
-    num_atom_types=10, # unknown 미포함
+    atom_dim=75,      # atom feature 차원
+    bond_dim=14,        # bond feature 차원
+    hidden_dim=512,
+    num_atom_types=10, # 아직 반영안됨
     depth=5
 ).to(device)
 
@@ -65,6 +66,11 @@ for epoch in range(epochs):
         pred = model(batch)
         
         loss = criterion(pred, target)
+        # 여기 만들어야함
+        bond_loss = ...
+        atom_loss = ...
+
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
