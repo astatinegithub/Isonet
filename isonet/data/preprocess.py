@@ -79,7 +79,7 @@ def makeMolGraph(reader, output_path, validator: MolValidator, max_len=None) -> 
 
 if __name__ == "__main__":
     input_path = ROOT + "dataset/raw/Compound_000000001_000500000.sdf"
-    output_path = ROOT + "dataset/processed_data/clean_dataset.pt"
+    output_path = ROOT + "dataset/processed_data/dataset_for_learn_modelA.pt"
 
     reader = SDFReader(input_path)
     validator = MolValidator(allowed_atoms)

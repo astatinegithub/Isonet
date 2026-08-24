@@ -92,21 +92,21 @@ class AtomFeaturizer(OneHotFeaturizer):
     ]
 
         return cls(
-            atomic_num=ATOM_NUMS,
+            atomic_nums=ATOM_NUMS,
             degrees=DEGREES,
             formal_charges=FORMAL_CHARGES,
             chiral_tags=CHIRAL_TAGS,
             num_hs=NUM_HS,
             hybeidizations=HYBRIDIZATIONS,
-            use_stereo=True
+            use_stereo=False
         )
 
 
 
 class BondFeaturizer(OneHotFeaturizer):
-    def __init__(self, bond_type, bond_stereos, use_stereo):
+    def __init__(self, bond_types, bond_stereos, use_stereo):
     
-        self.bond_types: list = bond_type
+        self.bond_types: list = bond_types
         self.bond_stereos: list = bond_stereos
         self.use_stereo: bool = use_stereo
 
@@ -159,5 +159,5 @@ class BondFeaturizer(OneHotFeaturizer):
         return cls(
             bond_types=BOND_TYPES,
             bond_stereos=BOND_STEREOS,
-            use_stereo=True
+            use_stereo=False
         )

@@ -37,7 +37,7 @@ def mol2feature(mol: Chem.Mol) -> Data:
     atomfeaturizer = AtomFeaturizer.model_A()
     bondfeaturizer = BondFeaturizer.model_A()
     
-    node_feature = [atomfeaturizer(atom) for atom in mol]
+    node_feature = [atomfeaturizer(atom) for atom in mol.GetAtoms()]   
 
     for bond in mol.GetBonds():
         bond: Bond
