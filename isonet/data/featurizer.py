@@ -36,10 +36,12 @@ class AtomFeaturizer(OneHotFeaturizer):
 
 
     def atom_type(self, a: Atom):
-        try:
-            return self.atomic_nums.index(a.GetAtomicNum())
-        except ValueError:
-            return len(self.atomic_nums) # unknown 값
+        return self.atomic_nums.index(a.GetAtomicNum())
+
+
+    @property
+    def num_atom_classes(self):
+        return len(self.atomic_nums)
 
 
     def __call__(self, a: Atom) -> Tensor:
@@ -110,10 +112,12 @@ class BondFeaturizer(OneHotFeaturizer):
 
 
     def bond_type(self, bond: Bond) -> int:
-        try:
-            return self.bond_types.index(bond.GetBondType())
-        except ValueError:
-            return len(self.bond_types)
+        return self.bond_types.index(bond.GetBondType())
+
+
+    @property
+    def num_bond_classes(self):
+        return len(self.bond_types)
 
     
     def __call__(self, bond: Bond) -> Tensor:

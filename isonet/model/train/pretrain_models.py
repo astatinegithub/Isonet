@@ -14,6 +14,7 @@ from isonet.utils.path import str2path
 from isonet.config import ROOT
 from isonet.model.dmpnn import *
 from isonet.data.dataset import SSLDataset 
+from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer 
 
 torch.manual_seed(25)
 
@@ -39,13 +40,21 @@ train_loader = DataLoader(
     shuffle=True
 )
 
+# 모델 설정필요
+atom_featurizer = AtomFeaturizer.model_A()
+bond_featurizer = BondFeaturizer.model_A()
+
+num_atom_types = len(atom_featurizer.atomic_nums) + 1
+num_bond_types = len(bond_featurizer.bond_types) + 1
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = SSLModel(
     atom_dim=75,      # atom feature 차원
     bond_dim=14,        # bond feature 차원
     hidden_dim=512,
-    num_atom_types=10, # 아직 반영안됨
+    atom_types=num_atom_types,
+    bond_types=num_bond_types,
     depth=5
 ).to(device)
 
@@ -57,21 +66,28 @@ criterion = nn.CrossEntropyLoss()
 
 
 model.train()
+
 for epoch in range(epochs):
     total_loss = 0
     for batch in tqdm(train_loader):
         batch = batch.to(device)
-        target = batch.atom_target  
-
-        pred = model(batch)
-        
-        loss = criterion(pred, target)
-        # 여기 만들어야함
-        bond_loss = ...
-        atom_loss = ...
-
-
         optimizer.zero_grad()
+        atom_pred, bond_pred = model(batch)
+
+        # 실제 SSL target이 있는 위치
+        atom_valid = batch.atom_target != -100
+        bond_valid = batch.bond_target != -100
+
+        loss = torch.tensor(0.0, device=device)
+
+        if atom_valid.any():
+            atom_loss = criterion(atom_pred[atom_valid], batch.atom_target[atom_valid])
+            loss += atom_loss
+
+        if bond_valid.any():
+            bond_loss = criterion(bond_pred[bond_valid], batch.bond_target[bond_valid])
+            loss += bond_loss
+
         loss.backward()
         optimizer.step()
 

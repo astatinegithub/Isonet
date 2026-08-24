@@ -83,8 +83,8 @@ class MolGraph(Data):
         )
 
         # for pretrain variables (task아니어도 일단 가지고 있는게 좋음)
-        self.atom_mask_idx = torch.empty(0, dtype=torch.long)
-        self.bond_mask_idx = torch.empty(0, dtype=torch.long)
+        # self.atom_mask_idx = torch.empty(0, dtype=torch.long)
+        # self.bond_mask_idx = torch.empty(0, dtype=torch.long)
 
         self.atom_target = torch.empty(0, dtype=torch.long)
         self.bond_target = torch.empty(0, dtype=torch.long)
@@ -133,34 +133,41 @@ class SSLDataset(Dataset): # working on here!                   objective: bond�
 
     def get(self, idx):
         data: MolGraph = deepcopy(self.data_list[idx])
+        num_atoms = data.x.size(0)
+        num_bonds = data.edge_attr.size(0) // 2
+
+        data.atom_target = torch.full((num_atoms,), -100, dtype=torch.long)
+        data.bond_target = torch.full((num_bonds,), -100, dtype=torch.long)
+
 
         if self.atom_select_ratio > torch.rand(1).item():
-            num_atoms = data.x.size(0)
             num_mask = max(1,int(num_atoms * self.atom_mask_ratio))
             atom_mask_idx = torch.randperm(num_atoms)[:num_mask]
 
-            data.atom_target = data.atom_type[atom_mask_idx]
+            data.atom_target[atom_mask_idx] = data.atom_type[atom_mask_idx]
             data.atom_mask_idx = atom_mask_idx
 
             # masking
             data.x[atom_mask_idx] = 0
         else:
-            num_bonds = data.edge_attr.size(0) // 2
+            if num_bonds == 0:
+                return data
             num_mask = max(1,int(num_bonds * self.bond_mask_ratio)) # 마스킹할 갯수
             bond_mask_idx = torch.randperm(num_bonds)[:num_mask]
 
             forward_idx = bond_mask_idx * 2
             reverse_idx = bond_mask_idx * 2 + 1
 
+            data.bond_target[bond_mask_idx] = data.bond_type[bond_mask_idx]
+            data.bond_mask_idx = bond_mask_idx
+
             data.edge_attr[forward_idx] = 0
             data.edge_attr[reverse_idx] = 0
 
-            data.bond_target = data.bond_type[bond_mask_idx]
-            data.bond_mask_idx = bond_mask_idx
-
+            
         return data
 
-    
+
 
 # def create_ssl_dataloader(path, batch_size=64,
 #                           mask_ratio=0.15, shuffle=True):

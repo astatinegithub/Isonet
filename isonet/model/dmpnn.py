@@ -41,6 +41,11 @@ class DMPNN(MessagePassing):
             m_edge = m_edge - m[rev_edge]
             h = h0 + m_edge
             # h = h + self.propagate(edge_index, h=h, rev_edge=rev_edge)
+        forward_h = h[0::2]
+        reverse_h = h[1::2]
+        edge_emb = (
+            forward_h + reverse_h
+        ) / 2
 
         node_emb = torch.zeros(x.size(0), h.size(1), device=x.device)
         node_emb.index_add_(0, edge_index[1], h)
@@ -49,7 +54,7 @@ class DMPNN(MessagePassing):
         node_emb = self.W_a(node_emb)
         node_emb = torch.relu(node_emb)
 
-        return node_emb
+        return node_emb, edge_emb
     
 
     def message(self, h_j): # h_j 는 정해진 값임, x, h, y이런식으로 바뀌면 안됨
@@ -143,12 +148,10 @@ class SSLModel(nn.Module):
 
 
     def forward(self, data: MolGraph):
-        h = self.encoder(data)
+        atom_h, bond_h = self.encoder(data)
 
-        # mask된 bond/atom만 예측
-        h_mask = h[data.mask_idx]
-        atom_logits = self.atom_head(h_mask) 
-        bond_logits = self.bond_head(h_mask) 
+        atom_logits = self.atom_head(atom_h) 
+        bond_logits = self.bond_head(bond_h) 
         return atom_logits, bond_logits # 그냥 둘다 넣어뒀는데 이게 맞나? 
 
  
