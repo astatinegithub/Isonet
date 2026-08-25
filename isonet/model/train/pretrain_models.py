@@ -1,11 +1,15 @@
 from rdkit import Chem
 import time
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
+from torch.utils.data import random_split
+
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 
@@ -22,24 +26,49 @@ graph_path = ROOT + "dataset/processed_data/for_test.pt"
 
 
 batch_size = 64
-epochs = 30
+epochs = 2
 lr = 1e-3
 
 
 # dataset
 graphs = torch.load(graph_path, weights_only=False)
 
-dataset = SSLDataset(
+train_size = int(len(graphs) * 0.8)
+val_size = len(graphs) - train_size
+
+train_graphs, val_graphs = random_split(
     graphs,
+    [train_size, val_size],
+    generator=torch.Generator().manual_seed(25)
+)
+
+
+train_dataset = SSLDataset(
+    train_graphs,
     atom_mask_ratio=0.15,
     bond_mask_ratio=0.15
 )
 
+val_dataset = SSLDataset(
+    val_graphs,
+    atom_mask_ratio=0.15,
+    bond_mask_ratio=0.15
+)
+
+
 train_loader = DataLoader(
-    dataset,
+    train_dataset,
     batch_size=batch_size,
     shuffle=True
 )
+
+val_loader = DataLoader(
+    val_dataset,
+    batch_size=batch_size,
+    shuffle=False
+)
+
+
 print('maked a dataloader')
 
 # 모델 설정필요
@@ -67,10 +96,14 @@ optimizer = torch.optim.AdamW(
 criterion = nn.CrossEntropyLoss()
 
 
-model.train()
+train_loss_history = []
+val_loss_history = []
+
+
 
 for epoch in range(epochs):
-    total_loss = 0
+    train_loss = 0
+    model.train()
     for batch in tqdm(train_loader):
         batch = batch.to(device)
         optimizer.zero_grad()
@@ -93,9 +126,36 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
 
-        total_loss += loss.item()
+        train_loss += loss.item()
+    
 
-    print(f"Epoch {epoch+1} | loss {total_loss/ len(train_loader)}", )
+    val_loss = 0
+    model.eval()
+    with torch.no_grad():
+        for batch in val_loader:
+            batch = batch.to(device)
+
+            atom_pred, bond_pred = model(batch)
+
+            atom_valid = batch.atom_target != -100
+            bond_valid = batch.bond_target != -100
+
+            loss = 0
+
+            if atom_valid.any():
+                loss += criterion(atom_pred[atom_valid], batch.atom_target[atom_valid])
+
+            if bond_valid.any():
+                loss += criterion(bond_pred[bond_valid], batch.bond_target[bond_valid])
+
+            val_loss += loss.item()
+
+    print("val loss:", val_loss / len(val_loader))
+
+    train_loss_history.append(train_loss / len(train_loader))
+    val_loss_history.append(val_loss / len(val_loader))
+    print(f"Epoch {epoch+1} | train loss {train_loss/ len(train_loader)} |valid loss {val_loss/ len(val_loader)}", )
+
     torch.save(
         {
             "encoder": model.encoder.state_dict(),
@@ -106,3 +166,15 @@ for epoch in range(epochs):
         },
         ROOT + f"model/checkpoint/ssl_checkpoint_{epoch}epoch.pt"
     )
+
+plt.plot(train_loss_history, label="Train")
+plt.plot(val_loss_history, label="Validation")
+
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.legend()
+plt.tight_layout()
+
+plt.savefig(ROOT + "model/checkpoint/loss_curve.png",dpi=300)
+
+plt.show()
