@@ -16,6 +16,9 @@ from isonet.config import ROOT
 from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 
+ATOM_FEATURIZER = AtomFeaturizer.model_A()
+BOND_FEATURIZER = BondFeaturizer.model_A()
+
 
 def build_reverse_edge_index(edge_index: list) -> list:
     edge_dict = {}
@@ -29,14 +32,12 @@ def build_reverse_edge_index(edge_index: list) -> list:
     return rev_edge
 
 
-
-def mol2feature(mol: Chem.Mol) -> Data:
+def mol2feature(mol: Chem.Mol,
+                atomfeaturizer: AtomFeaturizer =ATOM_FEATURIZER,
+                bondfeaturizer: BondFeaturizer =BOND_FEATURIZER) -> Data:
     edge_attr   = []
     edge_index  = []
 
-    atomfeaturizer = AtomFeaturizer.model_A()
-    bondfeaturizer = BondFeaturizer.model_A()
-    
     node_feature = [atomfeaturizer(atom) for atom in mol.GetAtoms()]   
 
     for bond in mol.GetBonds():
