@@ -19,6 +19,7 @@ def mol2graph(mol, y=None, y_mask=None): # 수정중
         return None
     
     graph = MolGraph(*mol2feature(mol))
+    graph.smiles = Chem.MolToSmiles(mol, isomericSmiles=True)
 
     if y is not None:
         graph.y = y
@@ -85,7 +86,7 @@ if __name__ == "__main__":
     validator = MolValidator(allowed_atoms)
     
 
-    makeMolGraph(reader, output_path, validator)
+    makeMolGraph(reader, output_path, validator, max_len=10000)
 
 
         # print(i, Chem.MolToSmiles(mol))

@@ -82,6 +82,13 @@ class MolGraph(Data):
             y_mask=y_mask
         )
 
+        self.x = x
+        self.edge_index = edge_index
+        self.edge_attr = edge_attr
+        self.rev_edge = rev_edge
+        self.atom_type = atom_type
+        self.bond_type = bond_type
+
         # for pretrain variables (task아니어도 일단 가지고 있는게 좋음)
         # self.atom_mask_idx = torch.empty(0, dtype=torch.long)
         # self.bond_mask_idx = torch.empty(0, dtype=torch.long)
@@ -145,7 +152,7 @@ class SSLDataset(Dataset): # working on here!                   objective: bond�
             atom_mask_idx = torch.randperm(num_atoms)[:num_mask]
 
             data.atom_target[atom_mask_idx] = data.atom_type[atom_mask_idx]
-            data.atom_mask_idx = atom_mask_idx
+            # data.atom_mask_idx = atom_mask_idx
 
             # masking
             data.x[atom_mask_idx] = 0
@@ -159,7 +166,7 @@ class SSLDataset(Dataset): # working on here!                   objective: bond�
             reverse_idx = bond_mask_idx * 2 + 1
 
             data.bond_target[bond_mask_idx] = data.bond_type[bond_mask_idx]
-            data.bond_mask_idx = bond_mask_idx
+            # data.bond_mask_idx = bond_mask_idx
 
             data.edge_attr[forward_idx] = 0
             data.edge_attr[reverse_idx] = 0

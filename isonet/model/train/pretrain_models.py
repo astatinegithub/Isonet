@@ -18,11 +18,11 @@ from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 torch.manual_seed(25)
 
-graph_path = ROOT + "dataset/processed_data/train_graph1.pt"
+graph_path = ROOT + "dataset/processed_data/for_test.pt"
 
 
 batch_size = 64
-epochs = 10
+epochs = 30
 lr = 1e-3
 
 
@@ -31,7 +31,8 @@ graphs = torch.load(graph_path, weights_only=False)
 
 dataset = SSLDataset(
     graphs,
-    mask_ratio=0.15
+    atom_mask_ratio=0.15,
+    bond_mask_ratio=0.15
 )
 
 train_loader = DataLoader(
@@ -39,6 +40,7 @@ train_loader = DataLoader(
     batch_size=batch_size,
     shuffle=True
 )
+print('maked a dataloader')
 
 # 모델 설정필요
 atom_featurizer = AtomFeaturizer.model_A()
@@ -50,7 +52,7 @@ num_bond_types = len(bond_featurizer.bond_types) + 1
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = SSLModel(
-    atom_dim=75,      # atom feature 차원
+    atom_dim=72,      # atom feature 차원
     bond_dim=14,        # bond feature 차원
     hidden_dim=512,
     atom_types=num_atom_types,
@@ -97,7 +99,8 @@ for epoch in range(epochs):
     torch.save(
         {
             "encoder": model.encoder.state_dict(),
-            "head": model.head.state_dict(),
+            "atom_head": model.atom_head.state_dict(),
+            "bond_head": model.bond_head.state_dict(),
             "optimizer": optimizer.state_dict(),
             "epoch": epoch
         },

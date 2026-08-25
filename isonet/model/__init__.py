@@ -4,8 +4,6 @@ from isonet.model.dmpnn import (
     IsonetModel
 )
 
-from isonet.model.train.pretrain_models import *
-
 
 # __all__ = [
 #     "DMPNN",

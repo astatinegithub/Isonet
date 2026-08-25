@@ -46,6 +46,7 @@ class DMPNN(MessagePassing):
         edge_emb = (
             forward_h + reverse_h
         ) / 2
+        
 
         node_emb = torch.zeros(x.size(0), h.size(1), device=x.device)
         node_emb.index_add_(0, edge_index[1], h)
