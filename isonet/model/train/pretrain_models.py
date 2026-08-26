@@ -71,6 +71,7 @@ val_loader = DataLoader(
 
 print('maked a dataloader')
 
+
 # 모델 설정필요
 atom_featurizer = AtomFeaturizer.model_A()
 bond_featurizer = BondFeaturizer.model_A()
@@ -98,6 +99,15 @@ criterion = nn.CrossEntropyLoss()
 
 train_loss_history = []
 val_loss_history = []
+
+
+
+batch = next(iter(train_loader))
+batch = batch.to(device)
+
+print("model:", next(model.parameters()).device)
+print("x:", batch.x.device)
+print("edge_attr:", batch.edge_attr.device)
 
 
 
@@ -154,7 +164,7 @@ for epoch in range(epochs):
 
     train_loss_history.append(train_loss / len(train_loader))
     val_loss_history.append(val_loss / len(val_loader))
-    print(f"Epoch {epoch+1} | train loss {train_loss/ len(train_loader)} |valid loss {val_loss/ len(val_loader)}", )
+    print(f"Epoch {epoch+1} | train loss {train_loss/ len(train_loader)} | valid loss {val_loss/ len(val_loader)}", )
 
     torch.save(
         {

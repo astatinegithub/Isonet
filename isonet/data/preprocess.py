@@ -86,9 +86,9 @@ def makeMolGraph(reader, output_path, validator: MolValidator, max_len=None) -> 
 if __name__ == "__main__":
     from time import time
     input_path = ROOT + "dataset/raw/" + "Compound_000000001_000500000.sdf"
-    output_path = ROOT + "dataset/processed_data/" + f"for_test_{time()}.pt"
+    output_path = ROOT + "dataset/processed_data/" + f"for_test_{int(time())}.pt"
 
     reader = SDFReader(input_path)
     validator = MolValidator(allowed_atoms)
     
-    makeMolGraph(reader, output_path, validator)
+    makeMolGraph(reader, output_path, validator, max_len=30000)
