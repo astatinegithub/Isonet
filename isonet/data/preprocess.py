@@ -26,7 +26,7 @@ def mol2graph(mol, y=None, y_mask=None): # 수정중
     if y is not None:
         graph.y = y
     if y_mask is not None:
-        graph.y_mask = y_mask
+        graph.y_mask = y_mask # mask가 필요한가? 일단 만들다가 필요없는거 같으면 지워야함
 
     return graph
 
@@ -81,6 +81,9 @@ def makeMolGraph(reader, output_path, validator: MolValidator, max_len=None) -> 
     validator.report()
     print(f"path : {output_path}")
 
+
+
+# 여기에 admet읽는 거 추가할떄 y -> [admet1, admet2, admet3, ...]식으로 저장하되 없으면 nan체워서 넣어야함
 
 
 if __name__ == "__main__":

@@ -28,6 +28,8 @@ This project is to create a model that makes predictions based on SMILE data usi
 - pandas
 - rdkit
 - matplotlib
+- pyarrow # parquet읽기위해
+- umap-learn
 
 you can install these by pip:
 
@@ -37,6 +39,8 @@ you can install these by pip:
 pip install torch torchvision
 pip install rdkit
 pip install matplotlib
+pip install pyarrow
+pip install umap-learn
 ```
 
 

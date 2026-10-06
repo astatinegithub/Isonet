@@ -22,7 +22,7 @@ from isonet.model.dmpnn import DMPNN
 # =========================================================
 
 graph_path = ROOT + "dataset/processed_data/for_test_1787700186.pt"
-checkpoint_path = ROOT + "model/checkpoint/ssl_checkpoint_29epoch.pt"
+checkpoint_path = ROOT + "model/checkpoint/model_A/ssl_checkpoint_0epoch.pt"
 
 output_dir = ROOT + "test/picture/embedding3/"
 os.makedirs(output_dir, exist_ok=True)

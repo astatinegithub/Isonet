@@ -43,10 +43,7 @@ class DMPNN(MessagePassing):
             # h = h + self.propagate(edge_index, h=h, rev_edge=rev_edge)
         forward_h = h[0::2]
         reverse_h = h[1::2]
-        edge_emb = (
-            forward_h + reverse_h
-        ) / 2
-        
+        edge_emb = (forward_h + reverse_h) / 2
 
         node_emb = torch.zeros(x.size(0), h.size(1), device=x.device)
         node_emb.index_add_(0, edge_index[1], h)
@@ -90,17 +87,6 @@ class FeedForward(nn.Module):
     
 
 
-class BondHead(nn.Module):
-    def __init__(self, hidden, out_dim):
-        super().__init__()
-        self.classifier = nn.Linear(hidden, out_dim)
-
-    def forward(self, x):
-        x = self.classifier(x)
-        return x
-
-
-
 class TaskHead(nn.Module):
     def __init__(self, hidden_dim, drop_rate):
         super().__init__()
@@ -112,76 +98,59 @@ class TaskHead(nn.Module):
         )
 
 
-    def forward(self,x):
-        return self.net(x)
-
-
-
-class ADMETHead(nn.Module):
-    def __init__(self, hidden_dim, drop_rate, num_endpoint):
-        super().__init__()
-        self.temp_head = TaskHead(hidden_dim, drop_rate)
-
-        self.output = nn.Linear(hidden_dim, num_endpoint)
 
     def forward(self, x):
-        x = self.temp_head(x)
-        logits = self.output(x)
-        return logits
-
+        x = self.net(x)
+        return x 
 
 
 class SSLModel(nn.Module):
-    def __init__(self, atom_dim, bond_dim, 
-                 atom_types, bond_types,
-                 hidden_dim, depth):
+    def __init__(self, cfg):
         super().__init__()
 
         self.encoder = DMPNN(
-            atom_dim,
-            bond_dim,
-            hidden_dim,
-            depth
+            cfg["atom_dim"],
+            cfg["bond_dim"],
+            cfg["hidden_dim"],
+            cfg["depth"]
         )
 
-        self.atom_head = nn.Linear(hidden_dim, atom_types)
-        self.bond_head = nn.Linear(hidden_dim, bond_types)
+        self.atom_head = nn.Linear(cfg["hidden_dim"], cfg["atom_types"])
+        self.bond_head = nn.Linear(cfg["hidden_dim"], cfg["bond_types"])
 
 
     def forward(self, data: MolGraph):
         atom_h, bond_h = self.encoder(data)
-
         atom_logits = self.atom_head(atom_h) 
         bond_logits = self.bond_head(bond_h) 
-        return atom_logits, bond_logits # 그냥 둘다 넣어뒀는데 이게 맞나? 
+
+        return atom_logits, bond_logits
 
  
 
 class IsonetModel(nn.Module):
-    def __init__(self, atom_dim: int, bond_dim: int, 
-                 dmpnn_hidden_dim: int, admet_hidden_dim: int, num_endpoint: int,
-                 drop_rate: float, depth: int):
+    def __init__(self, cfg):
         super().__init__()
 
         self.encoder = DMPNN(
-            atom_dim,
-            bond_dim,
-            dmpnn_hidden_dim,
-            depth
+            cfg["atom_dim"],
+            cfg["bond_dim"],
+            cfg["dmpnn_hidden_dim"],
+            cfg["depth"]
         )
 
-        self.head = ADMETHead(
-            admet_hidden_dim,
-            drop_rate,
-            num_endpoint
+        self.head = TaskHead(
+            cfg["admet_hidden_dim"],
+            cfg["drop_rate"],
+            cfg["num_endpoint"]
         )
+
+        self.pool = global_add_pool
 
 
     def forward(self, data: MolGraph):
         h = self.encoder(data)
-
-        h = global_add_pool(h, data.batch)
-
+        h = self.pool(h, data.batch)
         logits = self.head(h)
 
         return logits

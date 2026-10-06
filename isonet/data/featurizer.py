@@ -40,7 +40,7 @@ class AtomFeaturizer(OneHotFeaturizer):
 
 
     @property
-    def num_atom_classes(self):
+    def atom_type_nums(self):
         return len(self.atomic_nums)
 
 
@@ -116,7 +116,7 @@ class BondFeaturizer(OneHotFeaturizer):
 
 
     @property
-    def num_bond_classes(self):
+    def bond_type_nums(self):
         return len(self.bond_types)
 
     

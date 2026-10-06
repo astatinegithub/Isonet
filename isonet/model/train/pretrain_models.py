@@ -3,7 +3,6 @@ import time
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -20,13 +19,28 @@ from isonet.model.dmpnn import *
 from isonet.data.dataset import SSLDataset 
 from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer 
 
-torch.manual_seed(25)
+
+# setting
+while True:
+    model_type = input("choose the model type (A/B/C):").upper()
+    if model_type in ["A", "B", "C"]: break
+
 
 graph_path = ROOT + "dataset/processed_data/for_test.pt"
 
+torch.manual_seed(25)
+
+ISONET_CONFIG = {
+    "atom_dim": 72,        # atom feature 차원
+    "bond_dim": 14,        # bond feature 차원
+    "hidden_dim": 512,
+    "atom_types": AtomFeaturizer.model_A().atom_type_nums,
+    "bond_types:": BondFeaturizer.model_A().bond_type_nums,
+    "depth": 5
+}
 
 batch_size = 64
-epochs = 2
+epochs = 20
 lr = 1e-3
 
 
@@ -72,50 +86,22 @@ val_loader = DataLoader(
 print('maked a dataloader')
 
 
-# 모델 설정필요
-atom_featurizer = AtomFeaturizer.model_A()
-bond_featurizer = BondFeaturizer.model_A()
-
-num_atom_types = len(atom_featurizer.atomic_nums) + 1
-num_bond_types = len(bond_featurizer.bond_types) + 1
-
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = SSLModel(
-    atom_dim=72,      # atom feature 차원
-    bond_dim=14,        # bond feature 차원
-    hidden_dim=512,
-    atom_types=num_atom_types,
-    bond_types=num_bond_types,
-    depth=5
-).to(device)
+model = SSLModel(ISONET_CONFIG)
+model.to(device)
 
-optimizer = torch.optim.AdamW(
-    model.parameters(),
-    lr=lr
-)
+optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 criterion = nn.CrossEntropyLoss()
-
 
 train_loss_history = []
 val_loss_history = []
 
-
-
-batch = next(iter(train_loader))
-batch = batch.to(device)
-
-print("model:", next(model.parameters()).device)
-print("x:", batch.x.device)
-print("edge_attr:", batch.edge_attr.device)
-
-
-
+# train and valid
 for epoch in range(epochs):
     train_loss = 0
     model.train()
     for batch in tqdm(train_loader):
-        batch = batch.to(device)
+        batch: MolGraph = batch.to(device)
         optimizer.zero_grad()
         atom_pred, bond_pred = model(batch)
 
@@ -144,7 +130,6 @@ for epoch in range(epochs):
     with torch.no_grad():
         for batch in val_loader:
             batch = batch.to(device)
-
             atom_pred, bond_pred = model(batch)
 
             atom_valid = batch.atom_target != -100
