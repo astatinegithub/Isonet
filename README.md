@@ -49,3 +49,7 @@ pip install "PyTDC==0.4.1" --no-deps
 # dataset
 - [PubChem api](https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF/)
 - [chembl](https://www.ebi.ac.uk/chembl/)
+
+
+
+# clone시 가이드
