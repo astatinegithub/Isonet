@@ -30,6 +30,7 @@ This project is to create a model that makes predictions based on SMILE data usi
 - matplotlib
 - pyarrow # parquet읽기위해
 - umap-learn
+- PyTDC
 
 you can install these by pip:
 
@@ -41,6 +42,7 @@ pip install rdkit
 pip install matplotlib
 pip install pyarrow
 pip install umap-learn
+pip install "PyTDC==0.4.1" --no-deps
 ```
 
 

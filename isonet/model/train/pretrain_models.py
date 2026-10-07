@@ -20,16 +20,44 @@ from isonet.data.dataset import SSLDataset
 from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer 
 
 
-# setting
-while True:
-    model_type = input("choose the model type (A/B/C):").upper()
-    if model_type in ["A", "B", "C"]: break
+torch.manual_seed(25)
+def make_dataloader(path, split_ratio=0.8, batch_size=64):
+    graphs = torch.load(path, weights_only=False)
+    train_size = int(len(graphs) * split_ratio)
+    val_size = len(graphs) - train_size
+
+    train_graphs, val_graphs = random_split(
+        graphs,
+        [train_size, val_size],
+        generator=torch.Generator().manual_seed(25)
+    )
+
+    train_dataset = SSLDataset(
+        train_graphs,
+        atom_mask_ratio=0.15,
+        bond_mask_ratio=0.15
+    )
+    val_dataset = SSLDataset(
+        val_graphs,
+        atom_mask_ratio=0.15,
+        bond_mask_ratio=0.15
+    )
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False
+    )
+
+    return train_loader, val_loader
 
 
 graph_path = ROOT + "dataset/processed_data/for_test.pt"
-
-torch.manual_seed(25)
-
 ISONET_CONFIG = {
     "atom_dim": 72,        # atom feature 차원
     "bond_dim": 14,        # bond feature 차원
@@ -38,58 +66,17 @@ ISONET_CONFIG = {
     "bond_types:": BondFeaturizer.model_A().bond_type_nums,
     "depth": 5
 }
-
-batch_size = 64
 epochs = 20
 lr = 1e-3
 
 
 # dataset
-graphs = torch.load(graph_path, weights_only=False)
-
-train_size = int(len(graphs) * 0.8)
-val_size = len(graphs) - train_size
-
-train_graphs, val_graphs = random_split(
-    graphs,
-    [train_size, val_size],
-    generator=torch.Generator().manual_seed(25)
-)
-
-
-train_dataset = SSLDataset(
-    train_graphs,
-    atom_mask_ratio=0.15,
-    bond_mask_ratio=0.15
-)
-
-val_dataset = SSLDataset(
-    val_graphs,
-    atom_mask_ratio=0.15,
-    bond_mask_ratio=0.15
-)
-
-
-train_loader = DataLoader(
-    train_dataset,
-    batch_size=batch_size,
-    shuffle=True
-)
-
-val_loader = DataLoader(
-    val_dataset,
-    batch_size=batch_size,
-    shuffle=False
-)
-
-
+train_loader, val_loader = make_dataloader(graph_path)
 print('maked a dataloader')
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = SSLModel(ISONET_CONFIG)
-model.to(device)
-
+model = SSLModel(ISONET_CONFIG).to(device)
 optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 criterion = nn.CrossEntropyLoss()
 
@@ -159,7 +146,7 @@ for epoch in range(epochs):
             "optimizer": optimizer.state_dict(),
             "epoch": epoch
         },
-        ROOT + f"model/checkpoint/ssl_checkpoint_{epoch}epoch.pt"
+        ROOT + f"model/checkpoint/ssl_checkpoint_{epoch}epoch_{ISONET_CONFIG['hidden_dim']}{ISONET_CONFIG['depth']}.pt"
     )
 
 plt.plot(train_loss_history, label="Train")

@@ -71,7 +71,7 @@ def mol2feature(mol: Chem.Mol,
 class MolGraph(Data):
     def __init__(self, x=None, edge_index=None, edge_attr=None,
                 rev_edge=None, atom_type=None, bond_type=None,
-                 y=None, y_mask=None):
+                 y=None):
         super().__init__(
             x=x,
             edge_index=edge_index,
@@ -79,8 +79,7 @@ class MolGraph(Data):
             rev_edge=rev_edge,
             atom_type=atom_type,
             bond_tpye=bond_type,
-            y=y,
-            y_mask=y_mask
+            y=y
         )
 
         self.x = x

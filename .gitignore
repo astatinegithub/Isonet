@@ -9,4 +9,3 @@ checkpoint/
 # other setup
 *.egg-info
 setup.py
-config.py

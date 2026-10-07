@@ -5,13 +5,14 @@ from torch_geometric.nn import MessagePassing, global_add_pool, global_max_pool
 from torch_geometric.data import Data
 
 from isonet.data.dataset import MolGraph
+from isonet.model.dmpnn import DMPNN
 
 
 
 class ModelA(nn.Module):
-    def __init__(self, encoder, cfg):
+    def __init__(self, cfg):
         super().__init__()
-        self.encoder = encoder(
+        self.encoder = DMPNN(
             cfg["atom_dim"],
             cfg["bond_dim"],
             cfg["dmpnn_hidden_dim"],
