@@ -53,3 +53,4 @@ pip install "PyTDC==0.4.1" --no-deps
 
 
 # clone시 가이드
+python -m pip install -r requirements.txt
