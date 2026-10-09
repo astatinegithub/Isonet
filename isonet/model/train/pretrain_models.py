@@ -20,8 +20,7 @@ from isonet.data.dataset import SSLDataset
 from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer 
 
 
-torch.manual_seed(25)
-def make_dataloader(path, split_ratio=0.8, batch_size=64):
+def make_dataloader(path, split_ratio=0.8, batch_size=64, seed=25):
     graphs = torch.load(path, weights_only=False)
     train_size = int(len(graphs) * split_ratio)
     val_size = len(graphs) - train_size
@@ -29,7 +28,7 @@ def make_dataloader(path, split_ratio=0.8, batch_size=64):
     train_graphs, val_graphs = random_split(
         graphs,
         [train_size, val_size],
-        generator=torch.Generator().manual_seed(25)
+        generator=torch.Generator().manual_seed(seed)
     )
 
     train_dataset = SSLDataset(
@@ -57,34 +56,21 @@ def make_dataloader(path, split_ratio=0.8, batch_size=64):
     return train_loader, val_loader
 
 
-graph_path = ROOT + "dataset/processed_data/for_test.pt"
-ISONET_CONFIG = {
-    "atom_dim": 72,        # atom feature 차원
-    "bond_dim": 14,        # bond feature 차원
-    "hidden_dim": 512,
-    "atom_types": AtomFeaturizer.model_A().atom_type_nums,
-    "bond_types:": BondFeaturizer.model_A().bond_type_nums,
-    "depth": 5
-}
-epochs = 20
-lr = 1e-3
+def train_val_loss_graph(loss_history: dict[list], save_path=None, dpi=300):
+    epochs = range(1, len(loss_history["train_loss"]) + 1)
+    plt.plot(epochs, loss_history['train_loss'], label="Train")
+    plt.plot(epochs, loss_history['val_loss'], label="Validation")
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.tight_layout()
+    if save_path is not None:
+        plt.savefig(save_path, dpi=dpi)
+    plt.show()
 
 
-# dataset
-train_loader, val_loader = make_dataloader(graph_path)
-print('maked a dataloader')
-
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = SSLModel(ISONET_CONFIG).to(device)
-optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
-criterion = nn.CrossEntropyLoss()
-
-train_loss_history = []
-val_loss_history = []
-
-# train and valid
-for epoch in range(epochs):
+def train_one_epoch(model, train_loader, optimizer, device, criterion):
     train_loss = 0
     model.train()
     for batch in tqdm(train_loader):
@@ -97,11 +83,9 @@ for epoch in range(epochs):
         bond_valid = batch.bond_target != -100
 
         loss = torch.tensor(0.0, device=device)
-
         if atom_valid.any():
             atom_loss = criterion(atom_pred[atom_valid], batch.atom_target[atom_valid])
             loss += atom_loss
-
         if bond_valid.any():
             bond_loss = criterion(bond_pred[bond_valid], batch.bond_target[bond_valid])
             loss += bond_loss
@@ -110,53 +94,81 @@ for epoch in range(epochs):
         optimizer.step()
 
         train_loss += loss.item()
-    
+    return train_loss
 
+
+@torch.no_grad()
+def evaluate(model, val_loader, device, criterion):
     val_loss = 0
     model.eval()
-    with torch.no_grad():
-        for batch in val_loader:
-            batch = batch.to(device)
-            atom_pred, bond_pred = model(batch)
+    for batch in val_loader:
+        batch = batch.to(device)
+        atom_pred, bond_pred = model(batch)
 
-            atom_valid = batch.atom_target != -100
-            bond_valid = batch.bond_target != -100
+        atom_valid = batch.atom_target != -100
+        bond_valid = batch.bond_target != -100
 
-            loss = 0
+        loss = 0
+        if atom_valid.any():
+            loss += criterion(atom_pred[atom_valid], batch.atom_target[atom_valid])
+        if bond_valid.any():
+            loss += criterion(bond_pred[bond_valid], batch.bond_target[bond_valid])
 
-            if atom_valid.any():
-                loss += criterion(atom_pred[atom_valid], batch.atom_target[atom_valid])
+        val_loss += loss.item()
+    return val_loss
 
-            if bond_valid.any():
-                loss += criterion(bond_pred[bond_valid], batch.bond_target[bond_valid])
 
-            val_loss += loss.item()
 
-    print("val loss:", val_loss / len(val_loader))
+def model_pretraining(cfg, graph_path, loss_image_path, 
+                      epochs=20, lr=1e-3):
+    # dataset
+    train_loader, val_loader = make_dataloader(graph_path)
+    print('maked a dataloader')
 
-    train_loss_history.append(train_loss / len(train_loader))
-    val_loss_history.append(val_loss / len(val_loader))
-    print(f"Epoch {epoch+1} | train loss {train_loss/ len(train_loader)} | valid loss {val_loss/ len(val_loader)}", )
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = SSLModel(cfg).to(device)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    criterion = nn.CrossEntropyLoss()
+    loss_history = {'train':[], 'val':[]}
 
-    torch.save(
-        {
-            "encoder": model.encoder.state_dict(),
-            "atom_head": model.atom_head.state_dict(),
-            "bond_head": model.bond_head.state_dict(),
-            "optimizer": optimizer.state_dict(),
-            "epoch": epoch
-        },
-        ROOT + f"model/checkpoint/ssl_checkpoint_{epoch}epoch_{ISONET_CONFIG['hidden_dim']}{ISONET_CONFIG['depth']}.pt"
+    # train and valid
+    for epoch in range(epochs):
+        train_loss = train_one_epoch(model, train_loader, optimizer, device, criterion) / len(train_loader) # batch수로 나누기
+        val_loss = evaluate(model, val_loader, device, criterion) / len(val_loader) # batch수로 나누기
+
+        loss_history['train'].append(train_loss)
+        loss_history['val'].append(val_loss)
+        print(f"Epoch {epoch+1} | train loss {train_loss} | valid loss {val_loss}", )
+
+        torch.save(
+            {
+                "encoder": model.encoder.state_dict(),
+                "atom_head": model.atom_head.state_dict(),
+                "bond_head": model.bond_head.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "epoch": epoch,
+                "loss_history": loss_history,
+                'config':cfg 
+            },
+            ROOT + f"model/checkpoint/ssl_checkpoint_{epoch}epoch.pt"
+        )
+
+    train_val_loss_graph(loss_history, loss_image_path)
+
+
+if __name__ == "__main__":
+    torch.manual_seed(25)
+    ISONET_CONFIG = {
+        "atom_dim": 72,        # atom feature 차원
+        "bond_dim": 14,        # bond feature 차원
+        "hidden_dim": 512,
+        "atom_types": AtomFeaturizer.model_A().atom_type_nums,
+        "bond_types:": BondFeaturizer.model_A().bond_type_nums,
+        "depth": 5
+    }
+    model_pretraining(
+        cfg=ISONET_CONFIG,
+        graph_path=ROOT + "dataset/processed_data/for_test.pt",
+        loss_image_path=ROOT + "model/checkpoint/loss_curve.png",
+        epochs=20
     )
-
-plt.plot(train_loss_history, label="Train")
-plt.plot(val_loss_history, label="Validation")
-
-plt.xlabel("Epoch")
-plt.ylabel("Loss")
-plt.legend()
-plt.tight_layout()
-
-plt.savefig(ROOT + "model/checkpoint/loss_curve.png",dpi=300)
-
-plt.show()

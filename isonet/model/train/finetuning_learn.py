@@ -1,5 +1,3 @@
-from rdkit import Chem
-import time
 from tqdm import tqdm
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -7,15 +5,11 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
 from torch.utils.data import random_split
 
-from torch_geometric.data import Data, Dataset
 from torch_geometric.loader import DataLoader
 
-from isonet.utils.path import str2path
 from isonet.config import ROOT, ENDPOINTS, MODEL_A_CONFIG
-from isonet.model.dmpnn import IsonetModel
 from isonet.model.fine_tuning_models import ModelA
 
 
@@ -155,7 +149,8 @@ def model_finetuning(cfg, graph_path, checkpoint_path, loss_image_path, save_dir
                     "heads": model.heads.state_dict(),
                     "optimizer": optimizer.state_dict(),
                     "epoch": epoch,
-                    "loss": loss_history
+                    "loss_history": loss_history,
+                    "config": cfg
                 },
                 save_dir / f"finetune_epoch_{epoch + 1}.pt"
             )
@@ -166,7 +161,8 @@ def model_finetuning(cfg, graph_path, checkpoint_path, loss_image_path, save_dir
             "heads": model.heads.state_dict(),
             "optimizer": optimizer.state_dict(),
             "epoch": epoch,
-            "loss": loss_history
+            "loss_history": loss_history,
+            "config": cfg
         },
         save_dir / f"finish_train_epoch_{epoch+1}.pt"
     )
