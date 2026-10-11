@@ -10,7 +10,7 @@ from isonet.data.dataset import MolGraph
 
 class DMPNN(MessagePassing):
     def __init__(self, atom_dim, bond_dim, hidden_dim,
-                 depth, W_bias=False):
+                 depth, W_bias=False): # bias 조절할 필요있음
         super().__init__()
 
         self.depth = depth

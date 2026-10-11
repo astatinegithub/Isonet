@@ -10,7 +10,8 @@ from torch.utils.data import random_split
 from torch_geometric.loader import DataLoader
 
 from isonet.config import ROOT, ENDPOINTS, MODEL_A_CONFIG
-from isonet.model.fine_tuning_models import ModelA
+from isonet.model.fine_tuning_model import IsonetModel
+from isonet.eval.metrics import compute_metrics
 
 
 def make_dataloader(path, split_ratio=0.8, batch_size=64, seed=25):
@@ -89,18 +90,31 @@ def train_val_loss_graph(loss_history: dict[list], save_path=None, dpi=300):
 
 
 @torch.no_grad()
-def evaluate(model, val_loader, device, criterion_r, criterion_b, endpoints):
+def evaluate(model, val_loader, device, criterion_r, criterion_b, endpoints, target_idx=0) -> dict[int, dict]:
     val_total_loss = 0
     model.eval()
+    targets, predictions = [], []
     for batch in tqdm(val_loader):
         batch = batch.to(device)
         pred = model(batch)
         loss = compute_loss(pred, batch, criterion_r, criterion_b, endpoints)
         val_total_loss += loss.item()
-    return val_total_loss
+
+    predictions.append(torch.cat(
+        [pred[name] for name in endpoints],
+        dim=1,
+    ).cpu())
+    targets.append(batch.y[:, target_idx].cpu())
+
+    metrics = compute_metrics(      
+        torch.cat(targets),
+        torch.cat(predictions),
+    )
+
+    return val_total_loss, metrics
 
 
-def model_finetuning(cfg, graph_path, checkpoint_path, loss_image_path, save_dir,
+def model_finetuning(cfg, graph_path, loss_image_path, save_dir, pretrain_path=None,
                      epochs=10, save_freq=1, lr=1e-3, seed=25, endpoints=ENDPOINTS):
     torch.manual_seed(seed)
     if epochs < 1: raise ValueError("epochs는 1 이상이어야 합니다.")
@@ -114,26 +128,27 @@ def model_finetuning(cfg, graph_path, checkpoint_path, loss_image_path, save_dir
     train_loader, val_loader = make_dataloader(graph_path)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = ModelA(cfg).to(device)
+    model = IsonetModel(cfg).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     criterion_r = nn.MSELoss()
     criterion_b = F.binary_cross_entropy_with_logits
 
     assert list(model.heads.keys()) == list(endpoints),("모델 head와 endpoint 설정이 일치하지 않습니다.")
-    
-    loss_history = {"train_loss":[], "val_loss":[]} # loss 추적용
-    checkpoint = torch.load(
-        checkpoint_path,
-        map_location=device,
-        weights_only=False
-    )
-    model.encoder.load_state_dict(checkpoint["encoder"])
+
+    if pretrain_path is not None:                       # 사전학습 있을 때 
+        loss_history = {"train_loss":[], "val_loss":[]} # loss 추적용
+        checkpoint = torch.load(
+            pretrain_path,
+            map_location=device,
+            weights_only=False
+        )
+        model.encoder.load_state_dict(checkpoint["encoder"])
 
     
     # 불러오는거 아직 안만듦
     for epoch in range(epochs):
         train_total_loss = train_one_epoch(model, train_loader, optimizer, device, criterion_r, criterion_b, endpoints)
-        val_total_loss = evaluate(model, val_loader, device, criterion_r, criterion_b, endpoints)
+        val_total_loss,  = evaluate(model, val_loader, device, criterion_r, criterion_b, endpoints)
 
         train_loss = train_total_loss / len(train_loader)
         val_loss = val_total_loss / len(val_loader)
@@ -148,9 +163,10 @@ def model_finetuning(cfg, graph_path, checkpoint_path, loss_image_path, save_dir
                     "encoder": model.encoder.state_dict(),
                     "heads": model.heads.state_dict(),
                     "optimizer": optimizer.state_dict(),
+                    "model": model.state_dict(),
                     "epoch": epoch,
                     "loss_history": loss_history,
-                    "config": cfg
+                    "cfg": cfg
                 },
                 save_dir / f"finetune_epoch_{epoch + 1}.pt"
             )
@@ -160,9 +176,10 @@ def model_finetuning(cfg, graph_path, checkpoint_path, loss_image_path, save_dir
             "encoder": model.encoder.state_dict(),
             "heads": model.heads.state_dict(),
             "optimizer": optimizer.state_dict(),
+            "model": model.state_dict(),
             "epoch": epoch,
             "loss_history": loss_history,
-            "config": cfg
+            "cfg": cfg
         },
         save_dir / f"finish_train_epoch_{epoch+1}.pt"
     )
@@ -173,9 +190,9 @@ if __name__ == "__main__":
     model_finetuning(
         cfg=MODEL_A_CONFIG,
         graph_path=ROOT + "dataset/processed_data/Lipophilicity_processed.pt",
-        checkpoint_path=ROOT + "model/checkpoint/model_A/ssl_checkpoint_29epoch.pt",
         loss_image_path=ROOT + "model/expir0/loss_curve.png",
         save_dir=ROOT+'model/expir0',
+        pretrain_path=ROOT + "model/checkpoint/model_A/ssl_checkpoint_29epoch.pt",
         epochs=20,
         save_freq=1
     )

@@ -75,7 +75,7 @@ class AtomFeaturizer(OneHotFeaturizer):
 
 
     @classmethod
-    def model_A(cls): # model A용 feature
+    def default(cls, *, use_stereo: bool = False): # use_stereo=[] 식으로 적어줘야만 함 또는 생략
         ATOM_NUMS = list(range(1, 37)) + [53]  # H ~ Kr + I
         DEGREES = [0, 1, 2, 3, 4, 5]
         FORMAL_CHARGES = [-2, -1, 0, 1, 2]
@@ -98,7 +98,7 @@ class AtomFeaturizer(OneHotFeaturizer):
             chiral_tags=CHIRAL_TAGS,
             num_hs=NUM_HS,
             hybeidizations=HYBRIDIZATIONS,
-            use_stereo=False
+            use_stereo=use_stereo
         )
 
 
@@ -146,7 +146,7 @@ class BondFeaturizer(OneHotFeaturizer):
 
 
     @classmethod
-    def model_A(cls):
+    def default(cls, *, use_stereo: bool=False):
         BOND_TYPES = [
             Chem.rdchem.BondType.SINGLE,
             Chem.rdchem.BondType.DOUBLE,
@@ -155,9 +155,8 @@ class BondFeaturizer(OneHotFeaturizer):
         ]
         BOND_STEREOS = [0, 1, 2, 3, 4, 5]
 
-
         return cls(
             bond_types=BOND_TYPES,
             bond_stereos=BOND_STEREOS,
-            use_stereo=False
+            use_stereo=use_stereo
         )

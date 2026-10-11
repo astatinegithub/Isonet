@@ -3,12 +3,7 @@ from isonet.model.dmpnn import (
     SSLModel,
     IsonetModel
 )
-from isonet.model.fine_tuning_models import (
-    ModelA,
-    ModelB,
-    ModelC,
-    model_select_func
-)
+from isonet.model.fine_tuning_model import IsonetModel
 
 
 # __all__ = [

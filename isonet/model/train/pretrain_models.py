@@ -5,15 +5,10 @@ import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch import Tensor
 from torch.utils.data import random_split
 
-from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 
-
-from isonet.utils.path import str2path
 from isonet.config import ROOT
 from isonet.model.dmpnn import *
 from isonet.data.dataset import SSLDataset 
@@ -146,9 +141,10 @@ def model_pretraining(cfg, graph_path, loss_image_path,
                 "atom_head": model.atom_head.state_dict(),
                 "bond_head": model.bond_head.state_dict(),
                 "optimizer": optimizer.state_dict(),
+                "model": model.state_dict(),
                 "epoch": epoch,
                 "loss_history": loss_history,
-                'config':cfg 
+                "cfg":cfg 
             },
             ROOT + f"model/checkpoint/ssl_checkpoint_{epoch}epoch.pt"
         )

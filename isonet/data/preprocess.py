@@ -6,11 +6,10 @@ import torch
 import pandas as pd
 from pathlib import Path
 
-from concurrent.futures import ProcessPoolExecutor
-
-from isonet.config import ROOT, ENDPOINTS
+from isonet.config import ENDPOINTS
 from isonet.data.dataset import MolGraph, mol2feature
 from isonet.data.dataset_validation import *
+from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 
 allowed_atoms = set(list(range(1, 37)) + [53])
@@ -53,12 +52,18 @@ class ADMETReader:
             yield mol, y
 
 
-def mol2graph(mol, y=None): # 수정중
+
+def mol2graph(mol, use_stereo, y=None): # 수정중
     # RDKit 변환 실패
     if mol is None:
         return None
 
-    graph = MolGraph(*mol2feature(mol))
+    graph = MolGraph(*mol2feature(
+        mol,
+        atomfeaturizer=AtomFeaturizer.default(use_stereo=use_stereo),
+        bondFeaturizer=BondFeaturizer.default(use_stereo=use_stereo)
+    ))
+
     graph.smiles = Chem.MolToSmiles(mol, isomericSmiles=True)
 
     if y is not None:
@@ -67,7 +72,7 @@ def mol2graph(mol, y=None): # 수정중
     return graph
 
 
-def makeMolGraph(reader, output_path, validator: MolValidator, max_len=None) -> list:
+def makeMolGraph(reader, output_path, validator: MolValidator, use_stereo: bool, max_len=None) -> list:
     graphs = []
     removed = 0
 
@@ -83,10 +88,10 @@ def makeMolGraph(reader, output_path, validator: MolValidator, max_len=None) -> 
 
 
             if target is None:
-                graph = mol2graph(mol)
+                graph = mol2graph(mol, use_stereo)
             else: 
                 y = target
-                graph = mol2graph(mol, y)
+                graph = mol2graph(mol, use_stereo, y)
 
 
             if graph == None:
@@ -104,36 +109,37 @@ def makeMolGraph(reader, output_path, validator: MolValidator, max_len=None) -> 
     return graphs
 
 
+# import 용 
 
-# 여기에 admet읽는 거 추가할떄 y -> [admet1, admet2, admet3, ...]식으로 저장하되 없으면 nan체워서 넣어야함
 
-
-if __name__ == "__main__":
-    # from time import time
-    # input_path = ROOT + "dataset/raw/" + "Compound_000000001_000500000.sdf"
-    # output_path = ROOT + "dataset/processed_data/" + f"for_test_{int(time())}.pt"
-
-    # reader = SDFReader(input_path)
-    # validator = MolValidator(allowed_atoms)
+def make_pretrain_data(input_path: str, output_path: str, use_stereo: bool=False, max_len=None):
+    reader = SDFReader(input_path)
+    validator = MolValidator(allowed_atoms)
     
-    # makeMolGraph(reader, output_path, validator, max_len=30000)
+    makeMolGraph(
+        reader=reader,
+        output_path=output_path,
+        validator=validator,
+        use_stereo=use_stereo,
+        max_len=max_len
+    )
 
 
-    input_path = Path(ROOT) / "dataset" / "raw" / "admet" / "Lipophilicity.csv"
-    output_path = Path(ROOT) / "dataset" / "processed_data" / "Lipophilicity_processed.pt"
-
-
+# 여기에 admet읽는 거 추가할때 y -> [admet1, admet2, admet3, ...]식으로 저장하되 없으면 nan체워서 넣어야함
+def make_fine_tuning_data(input_path: str, output_path: str, use_stereo: bool=False, max_len=None):
     df = pd.read_csv(input_path)
-
-    target_columns = [
-        info["target_column"]
-        for info in ENDPOINTS.values()
-    ]
-
+    target_columns = [info["target_column"] for info in ENDPOINTS.values()]
     reader = ADMETReader(
         df=df,
         smiles_col="smiles",
         target_cols=target_columns,
     )
     validator = MolValidator(allowed_atoms)
-    makeMolGraph(reader, output_path, validator, max_len=30000)
+
+    makeMolGraph(
+        reader=reader,
+        output_path=output_path,
+        validator=validator,
+        use_stereo=use_stereo,
+        max_len=max_len
+    )

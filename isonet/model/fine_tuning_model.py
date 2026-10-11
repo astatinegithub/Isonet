@@ -9,7 +9,7 @@ from isonet.model.dmpnn import DMPNN
 
 
 
-class ModelA(nn.Module):
+class IsonetModel(nn.Module):
     def __init__(self, cfg):
         super().__init__()
         self.encoder = DMPNN(
@@ -18,7 +18,8 @@ class ModelA(nn.Module):
             cfg["dmpnn_hidden_dim"],
             cfg["depth"]
         )
-
+        self.use_stereo_attention = cfg.get("use_stereo_attention", False)
+        
         self.pool = global_add_pool # 임시pooling 방식
         self.heads = nn.ModuleDict({
             admet : nn.Sequential(
@@ -33,29 +34,7 @@ class ModelA(nn.Module):
     def forward(self, data: MolGraph):
         h, _ = self.encoder(data)
         h = self.pool(h, data.batch)
+        if self.use_stereo_attention:
+            ... 
         return {name: head(h) for name, head in self.heads.items()}
 
-
-
-class ModelB(nn.Module):
-    def __init__(self, cfg):
-        super().__init__()
-        ...
-        
-    def forward(self, x):
-        ...
-
-
-
-class ModelC(nn.Module):
-    def __init__(self, cfg):
-        super().__init__()
-        ...
-        
-    def forward(self, x):
-        ...
-
-
-
-def model_select_func(model_type):
-    ...

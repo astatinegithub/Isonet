@@ -6,6 +6,7 @@ ENDPOINTS = {
     "Lipophilicity": {
         "type": "regression",
         "target_column": "exp",
+        "selection_metric": "rmse",
     },
 }
 MODEL_A_CONFIG = {

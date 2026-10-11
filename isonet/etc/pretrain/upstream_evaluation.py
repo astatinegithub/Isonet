@@ -23,7 +23,7 @@ from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 graph_path = ROOT + "dataset/processed_data/for_test_1787700186.pt"
 checkpoint_path = ROOT + "model/checkpoint/model_A/ssl_checkpoint_29epoch.pt"
-output_dir = ROOT + "eval/pretrain/model_A/"
+output_dir = ROOT + "etc/pretrain/model_A/"
 os.makedirs(output_dir, exist_ok=True)
 
 ISONET_CONFIG = {

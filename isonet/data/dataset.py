@@ -1,23 +1,16 @@
-import numpy as np
-from tqdm import tqdm
 from copy import deepcopy
 
 from rdkit import Chem
 from rdkit.Chem.rdchem import Bond
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch import Tensor
-from torch.utils.data import DataLoader
 from torch_geometric.data import Data, Dataset
 
 from isonet.config import ROOT
 from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 
-ATOM_FEATURIZER = AtomFeaturizer.model_A()
-BOND_FEATURIZER = BondFeaturizer.model_A()
 
 
 def build_reverse_edge_index(edge_index: list) -> list:
@@ -32,11 +25,9 @@ def build_reverse_edge_index(edge_index: list) -> list:
     return rev_edge
 
 
-def mol2feature(mol: Chem.Mol,
-                atomfeaturizer: AtomFeaturizer =ATOM_FEATURIZER,
-                bondfeaturizer: BondFeaturizer =BOND_FEATURIZER) -> Data:
-    edge_attr   = []
-    edge_index  = []
+def mol2feature(mol: Chem.Mol, atomfeaturizer: AtomFeaturizer, bondfeaturizer: BondFeaturizer) -> Data:
+    edge_attr  = []
+    edge_index = []
 
     node_feature = [atomfeaturizer(atom) for atom in mol.GetAtoms()]   
 
@@ -122,7 +113,7 @@ class MoleculeDataset(Dataset):
 
 
 
-class SSLDataset(Dataset): # working on here!                   objective: bond에 대한 ssl추가하기
+class SSLDataset(Dataset):
     def __init__(self, data_list, atom_mask_ratio=0.15,
                  bond_mask_ratio=0.15, atom_select_ratio=0.5):
         super().__init__()
@@ -175,24 +166,7 @@ class SSLDataset(Dataset): # working on here!                   objective: bond�
         return data
 
 
-
-# def create_ssl_dataloader(path, batch_size=64,
-#                           mask_ratio=0.15, shuffle=True):
-
-#     graphs = torch.load(path)
-#     dataset = SSLDataset(graphs, mask_ratio)
-
-#     loader = DataLoader(
-#         dataset,
-#         batch_size=batch_size,
-#         shuffle=shuffle
-#     )
-#     return loader
-
-
-
 if __name__ == "__main__": # test zone
-    import time
     smiles = Chem.SDMolSupplier(ROOT+"dataset/raw/Compound_000000001_000500000.sdf")
 
     # for i, mol in enumerate(smiles):
