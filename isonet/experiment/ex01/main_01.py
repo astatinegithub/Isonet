@@ -82,6 +82,7 @@ save_dir1 = ROOT + "experiment/ex01/output/checkpoint1"
 save_dir2 = ROOT + "experiment/ex01/output/checkpoint2"
 Path(save_dir1).mkdir(parents=True, exist_ok=True)
 Path(save_dir2).mkdir(parents=True, exist_ok=True)
+
 loss_image_path1 = ROOT + "experiment/ex01/output/loss_curve1.png"
 loss_image_path2 = ROOT + "experiment/ex01/output/loss_curve2.png"
 
@@ -107,21 +108,21 @@ model2, last_model_path2 = model_finetuning(
 )
 
 # best_model선정
-checkpoint1 = select_best_model(last_model_path1)
-checkpoint2 = select_best_model(last_model_path2)
+checkpoint1 = select_best_model(last_model_path1, save_dir1)
+checkpoint2 = select_best_model(last_model_path2, save_dir2)
 
 
 # 모델 2가지 평가
 output_dir = ROOT + "experiment/ex01/output" 
 
 evaluate_model(
-    eval_model=checkpoint1['model'],
+    eval_model=checkpoint1,
     test_graphs=test_graphs1,
     output_dir=output_dir,
     output_file_number=1
 )
 evaluate_model(
-    eval_model=checkpoint2['model'],
+    eval_model=checkpoint2,
     test_graphs=test_graphs2,
     output_dir=output_dir,
     output_file_number=2
