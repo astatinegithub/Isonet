@@ -1,9 +1,9 @@
 import os
 import torch
 from pathlib import Path
+from copy import deepcopy
 
-
-from isonet.config import ROOT
+from isonet.config import ROOT, ALL_ENDPOINTS
 from isonet.data.dataset import split_dataset 
 from isonet.data.preprocess import make_fine_tuning_data
 from isonet.model.train.finetuning_learn import model_finetuning
@@ -13,8 +13,15 @@ from isonet.eval.downstream_evaluation import evaluate_model
 
 # 원하는 전처리 데이터 있는지 확인후 없으면 생성
 origin_raw_data = ROOT + "dataset/raw/admet/Lipophilicity.csv"
-output_path1 = ROOT + "dataset/processed_data/ex01_finetuning_data1.pt"
-output_path2 = ROOT + "dataset/processed_data/ex01_finetuning_data2.pt"
+endpoint_names = ["Lipophilicity"]
+endpoints = endpoints = {
+    name: deepcopy(ALL_ENDPOINTS[name])
+    for name in endpoint_names
+}
+
+output_path1 = ROOT + f"dataset/processed_data/ex01_{endpoint_names[-1]}/finetuning_data1.pt"
+output_path2 = ROOT + f"dataset/processed_data/ex01_{endpoint_names[-1]}/finetuning_data2.pt"
+Path(ROOT + f"dataset/processed_data/ex01_{endpoint_names[-1]}").mkdir(parents=True, exist_ok=True)
 
 if not(os.path.exists(output_path1) & os.path.exists(output_path2)):
     make_fine_tuning_data(origin_raw_data, output_path1, use_stereo=True)
@@ -58,13 +65,6 @@ for part1, part2 in zip(
 
 
 # endpoint 설정
-endpoints = {
-    "Lipophilicity": {
-        "type": "regression",
-        "target_column": "exp",
-        "selection_metric": "rmse",
-    },
-}
 
 
 # config 설정
@@ -81,13 +81,13 @@ BASE_CONFIG = {
 
 
 # 모델 2가지 생성
-save_dir1 = ROOT + "experiment/ex01/output/checkpoint1"
-save_dir2 = ROOT + "experiment/ex01/output/checkpoint2"
+save_dir1 = ROOT + f"experiment/ex01/output/{endpoint_names[-1]}/checkpoint1"
+save_dir2 = ROOT + f"experiment/ex01/output/{endpoint_names[-1]}/checkpoint2"
 Path(save_dir1).mkdir(parents=True, exist_ok=True)
 Path(save_dir2).mkdir(parents=True, exist_ok=True)
 
-loss_image_path1 = ROOT + "experiment/ex01/output/loss_curve1.png"
-loss_image_path2 = ROOT + "experiment/ex01/output/loss_curve2.png"
+loss_image_path1 = ROOT + f"experiment/ex01/output/{endpoint_names[-1]}/loss_curve1.png"
+loss_image_path2 = ROOT + f"experiment/ex01/output/{endpoint_names[-1]}/loss_curve2.png"
 
 model1, last_model_path1 = model_finetuning(
     cfg=BASE_CONFIG,
@@ -118,7 +118,7 @@ checkpoint2 = select_best_model(last_model_path2, save_dir2)
 
 
 # 모델 2가지 평가
-output_dir = ROOT + "experiment/ex01/output" 
+output_dir = ROOT + f"experiment/ex01/output/{endpoint_names[-1]}/" 
 
 evaluate_model(
     eval_model=checkpoint1,

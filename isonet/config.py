@@ -20,3 +20,11 @@ MODEL_A_CONFIG = {
     "drop_rate":0.3,
     "endpoints":ENDPOINTS
 }
+
+ALL_ENDPOINTS = {
+    "Lipophilicity": {
+        "type": "regression",
+        "target_column": "exp",
+        "selection_metric": "rmse",
+    },
+}
