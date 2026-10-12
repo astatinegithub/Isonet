@@ -1,2 +1,2 @@
-from metrics import compute_metrics
-from downstream_evaluation import evaluate_model
+from isonet.eval.metrics import compute_metrics
+from isonet.eval.downstream_evaluation import evaluate_model

@@ -5,12 +5,30 @@ from rdkit.Chem.rdchem import Bond
 
 import torch
 from torch import Tensor
+from torch.utils.data import random_split
 from torch_geometric.data import Data, Dataset
 
 from isonet.config import ROOT
 from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 
+__all__ = ["split_dataset","mol2feature", "MolGraph", "SSLDataset"]
+
+
+def split_dataset(path, split_ratio: list[int, int, int], seed=25):
+    """split_ratio는 [train, valid, test]순으로 입력"""
+    graphs = torch.load(path, weights_only=False)
+    train_size = int(len(graphs) * split_ratio[0])
+    val_size = int(len(graphs) * split_ratio[1])
+    test_size = int(len(graphs) * split_ratio[2])
+
+    train_graphs, val_graphs, test_graphs = random_split(
+        graphs,
+        [train_size, val_size, test_size],
+        generator=torch.Generator().manual_seed(seed)
+    )
+
+    return train_graphs, val_graphs, test_graphs
 
 
 def build_reverse_edge_index(edge_index: list) -> list:

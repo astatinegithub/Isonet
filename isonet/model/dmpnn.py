@@ -125,32 +125,3 @@ class SSLModel(nn.Module):
         bond_logits = self.bond_head(bond_h) 
 
         return atom_logits, bond_logits
-
- 
-
-class IsonetModel(nn.Module):
-    def __init__(self, cfg):
-        super().__init__()
-
-        self.encoder = DMPNN(
-            cfg["atom_dim"],
-            cfg["bond_dim"],
-            cfg["dmpnn_hidden_dim"],
-            cfg["depth"]
-        )
-
-        self.head = TaskHead(
-            cfg["admet_hidden_dim"],
-            cfg["drop_rate"],
-            cfg["num_endpoint"]
-        )
-
-        self.pool = global_add_pool
-
-
-    def forward(self, data: MolGraph):
-        h = self.encoder(data)
-        h = self.pool(h, data.batch)
-        logits = self.head(h)
-
-        return logits

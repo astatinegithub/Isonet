@@ -11,21 +11,11 @@ from torch_geometric.loader import DataLoader
 
 from isonet.config import ROOT
 from isonet.model.dmpnn import *
-from isonet.data.dataset import SSLDataset 
+from isonet.data.dataset import SSLDataset, split_dataset
 from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer 
 
 
-def make_dataloader(path, split_ratio=0.8, batch_size=64, seed=25):
-    graphs = torch.load(path, weights_only=False)
-    train_size = int(len(graphs) * split_ratio)
-    val_size = len(graphs) - train_size
-
-    train_graphs, val_graphs = random_split(
-        graphs,
-        [train_size, val_size],
-        generator=torch.Generator().manual_seed(seed)
-    )
-
+def make_dataloader(train_graphs, val_graphs, batch_size=64):
     train_dataset = SSLDataset(
         train_graphs,
         atom_mask_ratio=0.15,
@@ -97,7 +87,7 @@ def evaluate(model, val_loader, device, criterion):
     val_loss = 0
     model.eval()
     for batch in val_loader:
-        batch = batch.to(device)
+        batch: MolGraph = batch.to(device)
         atom_pred, bond_pred = model(batch)
 
         atom_valid = batch.atom_target != -100
@@ -114,25 +104,25 @@ def evaluate(model, val_loader, device, criterion):
 
 
 
-def model_pretraining(cfg, graph_path, loss_image_path, 
+def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path, 
                       epochs=20, lr=1e-3):
     # dataset
-    train_loader, val_loader = make_dataloader(graph_path)
+    train_loader, val_loader = make_dataloader(train_graphs, val_graphs)
     print('maked a dataloader')
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SSLModel(cfg).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
-    loss_history = {'train':[], 'val':[]}
+    loss_history = {'train_loss':[], 'val_loss':[]}
 
     # train and valid
     for epoch in range(epochs):
         train_loss = train_one_epoch(model, train_loader, optimizer, device, criterion) / len(train_loader) # batch수로 나누기
         val_loss = evaluate(model, val_loader, device, criterion) / len(val_loader) # batch수로 나누기
 
-        loss_history['train'].append(train_loss)
-        loss_history['val'].append(val_loss)
+        loss_history['train_loss'].append(train_loss)
+        loss_history['val_loss'].append(val_loss)
         print(f"Epoch {epoch+1} | train loss {train_loss} | valid loss {val_loss}", )
 
         torch.save(
@@ -158,13 +148,15 @@ if __name__ == "__main__":
         "atom_dim": 72,        # atom feature 차원
         "bond_dim": 14,        # bond feature 차원
         "hidden_dim": 512,
-        "atom_types": AtomFeaturizer.model_A().atom_type_nums,
-        "bond_types:": BondFeaturizer.model_A().bond_type_nums,
+        "atom_types": AtomFeaturizer.default().atom_type_nums,
+        "bond_types:": BondFeaturizer.default().bond_type_nums,
         "depth": 5
     }
+    trian_graphs, val_graphs, _ = split_dataset(ROOT + "dataset/processed_data/for_test.pt", split_ratio=[0.8, 0.2, 0])
     model_pretraining(
         cfg=ISONET_CONFIG,
-        graph_path=ROOT + "dataset/processed_data/for_test.pt",
+        trian_graphs=trian_graphs,
+        val_graphs=val_graphs,
         loss_image_path=ROOT + "model/checkpoint/loss_curve.png",
         epochs=20
     )

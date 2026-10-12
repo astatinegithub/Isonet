@@ -61,7 +61,7 @@ def mol2graph(mol, use_stereo, y=None): # 수정중
     graph = MolGraph(*mol2feature(
         mol,
         atomfeaturizer=AtomFeaturizer.default(use_stereo=use_stereo),
-        bondFeaturizer=BondFeaturizer.default(use_stereo=use_stereo)
+        bondfeaturizer=BondFeaturizer.default(use_stereo=use_stereo)
     ))
 
     graph.smiles = Chem.MolToSmiles(mol, isomericSmiles=True)
