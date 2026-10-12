@@ -20,7 +20,7 @@ def split_dataset(path, split_ratio: list[int, int, int], seed=25):
     graphs = torch.load(path, weights_only=False)
     train_size = int(len(graphs) * split_ratio[0])
     val_size = int(len(graphs) * split_ratio[1])
-    test_size = int(len(graphs) * split_ratio[2])
+    test_size = len(graphs) - (train_size+val_size)
 
     train_graphs, val_graphs, test_graphs = random_split(
         graphs,

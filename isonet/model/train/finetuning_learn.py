@@ -92,7 +92,7 @@ def evaluate(model, val_loader, device, criterion_r, criterion_b, endpoints, tar
 
 
 def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, pretrain_path=None,
-                     epochs=10, save_freq=1, lr=1e-3, seed=25, endpoints=ENDPOINTS) -> IsonetModel:
+                     epochs=10, save_freq=1, lr=1e-3, seed=25, endpoints=ENDPOINTS) -> tuple[IsonetModel, str]:
     torch.manual_seed(seed)
     if epochs < 1: raise ValueError("epochs는 1 이상이어야 합니다.")
     if save_freq < 1: raise ValueError("save_freq는 1 이상이어야 합니다.")
@@ -161,7 +161,7 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
         save_dir / f"finish_train_epoch_{epoch+1}.pt"
     )
     train_val_loss_graph(loss_history, loss_image_path)
-    return model
+    return model, save_dir / f"finish_train_epoch_{epoch+1}.pt"
 
 
 if __name__ == "__main__":

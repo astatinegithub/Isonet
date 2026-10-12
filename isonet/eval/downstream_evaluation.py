@@ -40,30 +40,28 @@ def evaluate(model, loader, device, endpoints):
     return metrics, y_true, y_pred
 
 
-def evaluate_model(eval_model_path, test_graphs_path, output_dir):
-    output_dir.mkdir(parents=True, exist_ok=True)
-
+def evaluate_model(eval_model: str|IsonetModel, test_graphs, output_dir, output_file_number) -> dict:
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    checkpoint = torch.load(
-        eval_model_path,
-        map_location="cpu",
-        weights_only=False,
-    )
+    if type(eval_model) == str:
+        checkpoint = torch.load(
+            eval_model,
+            map_location="cpu",
+            weights_only=False,
+        )
 
-    cfg = checkpoint["cfg"]
-    endpoints = cfg["endpoints"]
+        cfg = checkpoint["cfg"]
+        endpoints = cfg["endpoints"]
 
-    model = IsonetModel(cfg)
-    model.load_state_dict(checkpoint["model"])
-    model = model.to(device)
-
-    # 전처리된 test 그래프 목록
-    test_graphs = torch.load(
-        test_graphs_path,
-        map_location="cpu",
-        weights_only=False,
-    )
+        model = IsonetModel(cfg)
+        model.load_state_dict(checkpoint["model"])
+        model = model.to(device)
+    elif type(eval_model) == IsonetModel:
+        model = eval_model
+    else:
+        raise TypeError(f"잘못된 형식의 eval_model 입력이 들어왔습니다. \n입력 type : {type(eval_model)}")
+    
     test_loader = DataLoader(
         test_graphs,
         batch_size=64,
@@ -80,7 +78,7 @@ def evaluate_model(eval_model_path, test_graphs_path, output_dir):
     # 지표 출력 및 저장
     print(json.dumps(metrics, indent=2, ensure_ascii=False))
 
-    with (output_dir / "metrics.json").open("w", encoding="utf-8") as f:
+    with (output_dir / f"metrics_{output_file_number}.json").open("w", encoding="utf-8") as f:
         json.dump(
             metrics, f,
             indent=2,
@@ -95,8 +93,9 @@ def evaluate_model(eval_model_path, test_graphs_path, output_dir):
             "y_true": y_true,
             "y_pred": y_pred,
         },
-        output_dir / "predictions.pt",
+        output_dir / f"predictions{output_file_number}.pt",
     )
+    return metrics
 
 
 if __name__ == "__main__":

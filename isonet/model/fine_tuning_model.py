@@ -23,11 +23,11 @@ class IsonetModel(nn.Module):
         self.pool = global_add_pool # 임시pooling 방식
         self.heads = nn.ModuleDict({
             admet : nn.Sequential(
-                            nn.Linear(cfg['dmpnn_hidden_dim'], cfg['admet_hidden_dim']),
-                            nn.ReLU(),
-                            nn.Dropout(cfg['drop_rate']),
-                            nn.Linear(cfg['admet_hidden_dim'], 1)
-                        ) for admet in cfg['endpoints']
+                nn.Linear(cfg['dmpnn_hidden_dim'], cfg['admet_hidden_dim']),
+                nn.ReLU(),
+                nn.Dropout(cfg['drop_rate']),
+                nn.Linear(cfg['admet_hidden_dim'], 1)
+            ) for admet in cfg['endpoints']
         })
 
 
