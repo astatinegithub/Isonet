@@ -1,3 +1,4 @@
+import os
 import torch
 from pathlib import Path
 
@@ -15,20 +16,22 @@ origin_raw_data = ROOT + "dataset/raw/admet/Lipophilicity.csv"
 output_path1 = ROOT + "dataset/processed_data/ex01_finetuning_data1.pt"
 output_path2 = ROOT + "dataset/processed_data/ex01_finetuning_data2.pt"
 
-make_fine_tuning_data(origin_raw_data, output_path1, use_stereo=True)
-make_fine_tuning_data(origin_raw_data, output_path2, use_stereo=False)
-
+if not(os.path.exists(output_path1) & os.path.exists(output_path2)):
+    make_fine_tuning_data(origin_raw_data, output_path1, use_stereo=True)
+    make_fine_tuning_data(origin_raw_data, output_path2, use_stereo=False)
 
 data_path1 = output_path1
 data_path2 = output_path2
 
 train_graphs1, val_graphs1, test_graphs1 = split_dataset(
     path=data_path1,
-    split_ratio=[0.7, 0.2, 0.1]
+    split_ratio=[0.7, 0.2, 0.1],
+    seed=25
 )
 train_graphs2, val_graphs2, test_graphs2 = split_dataset(
     path=data_path2,
-    split_ratio=[0.7, 0.2, 0.1]
+    split_ratio=[0.7, 0.2, 0.1],
+    seed=25
 )
 
 
@@ -94,7 +97,8 @@ model1, last_model_path1 = model_finetuning(
     save_dir=save_dir1,
     pretrain_path=None,
     epochs=20,
-    endpoints=endpoints
+    endpoints=endpoints,
+    plt_close=True
 )
 model2, last_model_path2 = model_finetuning(
     cfg=BASE_CONFIG,
@@ -104,7 +108,8 @@ model2, last_model_path2 = model_finetuning(
     save_dir=save_dir2,
     pretrain_path=None,
     epochs=20,
-    endpoints=endpoints
+    endpoints=endpoints,
+    plt_close=True
 )
 
 # best_model선정

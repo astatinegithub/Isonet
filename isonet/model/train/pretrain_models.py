@@ -41,7 +41,7 @@ def make_dataloader(train_graphs, val_graphs, batch_size=64):
     return train_loader, val_loader
 
 
-def train_val_loss_graph(loss_history: dict[list], save_path=None, dpi=300):
+def train_val_loss_graph(loss_history: dict[list], save_path=None, dpi=300, plt_close=False):
     epochs = range(1, len(loss_history["train_loss"]) + 1)
     plt.plot(epochs, loss_history['train_loss'], label="Train")
     plt.plot(epochs, loss_history['val_loss'], label="Validation")
@@ -52,8 +52,10 @@ def train_val_loss_graph(loss_history: dict[list], save_path=None, dpi=300):
     plt.tight_layout()
     if save_path is not None:
         plt.savefig(save_path, dpi=dpi)
-    plt.show()
-
+    if plt_close:
+        plt.close()
+    else:
+        plt.show()
 
 def train_one_epoch(model, train_loader, optimizer, device, criterion):
     train_loss = 0
@@ -105,7 +107,7 @@ def evaluate(model, val_loader, device, criterion):
 
 
 def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path, 
-                      epochs=20, lr=1e-3):
+                      epochs=20, lr=1e-3, plt_close=False):
     # dataset
     train_loader, val_loader = make_dataloader(train_graphs, val_graphs)
     print('maked a dataloader')
@@ -139,24 +141,24 @@ def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path,
             ROOT + f"model/checkpoint/ssl_checkpoint_{epoch}epoch.pt"
         )
 
-    train_val_loss_graph(loss_history, loss_image_path)
+    train_val_loss_graph(loss_history, loss_image_path, plt_close=plt_close)
 
 
-if __name__ == "__main__":
-    torch.manual_seed(25)
-    ISONET_CONFIG = {
-        "atom_dim": 72,        # atom feature 차원
-        "bond_dim": 14,        # bond feature 차원
-        "hidden_dim": 512,
-        "atom_types": AtomFeaturizer.default().atom_type_nums,
-        "bond_types:": BondFeaturizer.default().bond_type_nums,
-        "depth": 5
-    }
-    trian_graphs, val_graphs, _ = split_dataset(ROOT + "dataset/processed_data/for_test.pt", split_ratio=[0.8, 0.2, 0])
-    model_pretraining(
-        cfg=ISONET_CONFIG,
-        trian_graphs=trian_graphs,
-        val_graphs=val_graphs,
-        loss_image_path=ROOT + "model/checkpoint/loss_curve.png",
-        epochs=20
-    )
+# if __name__ == "__main__":
+#     torch.manual_seed(25)
+#     ISONET_CONFIG = {
+#         "atom_dim": 72,        # atom feature 차원
+#         "bond_dim": 14,        # bond feature 차원
+#         "hidden_dim": 512,
+#         "atom_types": AtomFeaturizer.default().atom_type_nums,
+#         "bond_types:": BondFeaturizer.default().bond_type_nums,
+#         "depth": 5
+#     }
+#     trian_graphs, val_graphs, _ = split_dataset(ROOT + "dataset/processed_data/for_test.pt", split_ratio=[0.8, 0.2, 0])
+#     model_pretraining(
+#         cfg=ISONET_CONFIG,
+#         trian_graphs=trian_graphs,
+#         val_graphs=val_graphs,
+#         loss_image_path=ROOT + "model/checkpoint/loss_curve.png",
+#         epochs=20
+#     )
