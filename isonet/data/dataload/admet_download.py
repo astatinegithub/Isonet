@@ -38,6 +38,13 @@ DATASETS = {
             "datasets/clintox.csv.gz"
         ),
     },
+    "lipophilicity": {
+    "filename": "Lipophilicity.csv",
+    "url": (
+        "https://deepchemdata.s3-us-west-1.amazonaws.com/"
+        "datasets/Lipophilicity.csv"
+    ),
+},
 }
 
 
@@ -58,3 +65,4 @@ def download_dataset(name: str) -> Path:
 if __name__ == "__main__":
     for name in DATASETS:
         print(name, download_dataset(name))
+        origin_raw_data = download_dataset("lipophilicity")
