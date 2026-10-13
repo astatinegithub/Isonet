@@ -81,8 +81,11 @@ python -m pip install -r requirements.txt
 # clone시 가이드
 1. 가상환경제작
 
-`python -m venv chem` 를 이용해 가상환경을 만든다.
+`python -m venv chem`을 이용해 가상환경을 만든다.
 
 2. 필요 라이브러리 install
 
-`python -m pip install -r requirements.txt` # requirements.txt에 있는 
+`python -m pip install -r requirements.txt` # requirements.txt에 있는 요구 라이브러리를 다운로드 한다.
+
+__cuda사용시 `pip uninstall torch torch-geometric torchvision`을 하고 공식 사이트를 통해 알맞은 라이브러리를 설치한다.
+__
