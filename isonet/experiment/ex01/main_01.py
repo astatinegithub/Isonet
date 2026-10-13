@@ -137,3 +137,4 @@ if __name__ == "__main__":
         for name in endpoint_names
     }
     experiment_name = 'Lipophilicity'
+    run_experiment(origin_raw_data, experiment_name, endpoints)
