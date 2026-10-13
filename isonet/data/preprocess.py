@@ -126,12 +126,13 @@ def make_pretrain_data(input_path: str, output_path: str, use_stereo: bool=False
 
 
 # 여기에 admet읽는 거 추가할때 y -> [admet1, admet2, admet3, ...]식으로 저장하되 없으면 nan체워서 넣어야함
-def make_fine_tuning_data(input_path: str, output_path: str, use_stereo: bool=False, max_len=None):
+def make_fine_tuning_data(input_path: str, output_path: str, endpoints,
+                          smiles_col, use_stereo: bool=False, max_len=None):
     df = pd.read_csv(input_path)
-    target_columns = [info["target_column"] for info in ENDPOINTS.values()]
+    target_columns = [info["target_column"] for info in endpoints.values()]
     reader = ADMETReader(
         df=df,
-        smiles_col="smiles",
+        smiles_col=smiles_col,
         target_cols=target_columns,
     )
     validator = MolValidator(allowed_atoms)

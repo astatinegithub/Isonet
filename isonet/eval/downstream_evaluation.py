@@ -41,10 +41,11 @@ def evaluate(model, loader, device, endpoints):
 
 
 def evaluate_model(eval_model: str|IsonetModel, test_graphs, output_dir, output_file_number) -> dict:
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    if type(eval_model) == str:
+    if isinstance(eval_model, (str, Path)):
         checkpoint = torch.load(
             eval_model,
             map_location="cpu",
@@ -57,7 +58,7 @@ def evaluate_model(eval_model: str|IsonetModel, test_graphs, output_dir, output_
         model = IsonetModel(cfg)
         model.load_state_dict(checkpoint["model"])
         model = model.to(device)
-    elif type(eval_model) == IsonetModel:
+    elif isinstance(eval_model, IsonetModel):
         model = eval_model
     else:
         raise TypeError(f"잘못된 형식의 eval_model 입력이 들어왔습니다. \n입력 type : {type(eval_model)}")
