@@ -15,7 +15,7 @@ class IsonetModel(nn.Module):
         self.encoder = DMPNN(
             cfg["atom_dim"],
             cfg["bond_dim"],
-            cfg["dmpnn_hidden_dim"],
+            cfg["hidden_dim"],
             cfg["depth"]
         )
         self.use_stereo_attention = cfg.get("use_stereo_attention", False)
@@ -23,7 +23,7 @@ class IsonetModel(nn.Module):
         self.pool = global_add_pool # 임시pooling 방식
         self.heads = nn.ModuleDict({
             admet : nn.Sequential(
-                nn.Linear(cfg['dmpnn_hidden_dim'], cfg['admet_hidden_dim']),
+                nn.Linear(cfg['hidden_dim'], cfg['admet_hidden_dim']),
                 nn.ReLU(),
                 nn.Dropout(cfg['drop_rate']),
                 nn.Linear(cfg['admet_hidden_dim'], 1)

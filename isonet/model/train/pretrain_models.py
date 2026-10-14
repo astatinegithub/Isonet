@@ -106,7 +106,7 @@ def evaluate(model, val_loader, device, criterion):
 
 
 
-def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path, 
+def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path, save_dir,
                       epochs=20, lr=1e-3, plt_close=False):
     # dataset
     train_loader, val_loader = make_dataloader(train_graphs, val_graphs)
@@ -138,10 +138,11 @@ def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path,
                 "loss_history": loss_history,
                 "cfg":cfg 
             },
-            ROOT + f"model/checkpoint/ssl_checkpoint_{epoch}epoch.pt"
+            save_dir + f"/ssl_checkpoint_{epoch+1}epoch.pt"
         )
 
     train_val_loss_graph(loss_history, loss_image_path, plt_close=plt_close)
+    return save_dir + f"/ssl_checkpoint_{epochs}epoch.pt"
 
 
 # if __name__ == "__main__":
