@@ -16,11 +16,11 @@ from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 def run_experiment(cfg, finetune_data, pretrain_data, experiment_name, endpoints, train_seed, split_seed):
 
-    output_path1_1 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/pretrain_data1.pt"
-    output_path1_2 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/finetuning_data1.pt"
-    output_path2 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/finetuning_data2.pt"
+    output_path1_1 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/pretrain_data1.pt"
+    output_path1_2 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/finetuning_data1.pt"
+    output_path2 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/finetuning_data2.pt"
     
-    Path(ROOT + f"dataset/processed_data/ex01_{experiment_name}").mkdir(parents=True, exist_ok=True)
+    Path(ROOT + f"dataset/processed_data/ex02_{experiment_name}").mkdir(parents=True, exist_ok=True)
 
     if not(os.path.exists(output_path1_1) & os.path.exists(output_path1_2) & os.path.exists(output_path2)):
         make_pretrain_data(pretrain_data, output_path1_1, use_stereo=True)
@@ -70,16 +70,16 @@ def run_experiment(cfg, finetune_data, pretrain_data, experiment_name, endpoints
 
 
     # 모델 2가지 생성
-    save_dir1_1 = ROOT + f"experiment/ex01/output/{experiment_name}/checkpoint1_1"
-    save_dir1_2 = ROOT + f"experiment/ex01/output/{experiment_name}/checkpoint1_2"
-    save_dir2 = ROOT + f"experiment/ex01/output/{experiment_name}/checkpoint2"
+    save_dir1_1 = ROOT + f"experiment/ex02/output/{experiment_name}/checkpoint1_1"
+    save_dir1_2 = ROOT + f"experiment/ex02/output/{experiment_name}/checkpoint1_2"
+    save_dir2 = ROOT + f"experiment/ex02/output/{experiment_name}/checkpoint2"
     Path(save_dir1_1).mkdir(parents=True, exist_ok=True)
     Path(save_dir1_2).mkdir(parents=True, exist_ok=True)
     Path(save_dir2).mkdir(parents=True, exist_ok=True)
 
-    loss_image_path1_1 = ROOT + f"experiment/ex01/output/{experiment_name}/loss_curve1_1.png"
-    loss_image_path1_2 = ROOT + f"experiment/ex01/output/{experiment_name}/loss_curve1_2.png"
-    loss_image_path2 = ROOT + f"experiment/ex01/output/{experiment_name}/loss_curve2.png"
+    loss_image_path1_1 = ROOT + f"experiment/ex02/output/{experiment_name}/loss_curve1_1.png"
+    loss_image_path1_2 = ROOT + f"experiment/ex02/output/{experiment_name}/loss_curve1_2.png"
+    loss_image_path2 = ROOT + f"experiment/ex02/output/{experiment_name}/loss_curve2.png"
 
 
     pretrain_last_model_path = model_pretraining(
@@ -122,7 +122,7 @@ def run_experiment(cfg, finetune_data, pretrain_data, experiment_name, endpoints
 
 
     # 모델 2가지 평가
-    output_dir = ROOT + f"experiment/ex01/output/{experiment_name}/" 
+    output_dir = ROOT + f"experiment/ex02/output/{experiment_name}/" 
 
     evaluate_model(
         eval_model=checkpoint1,
@@ -157,6 +157,6 @@ if __name__ == "__main__":
             "drop_rate":0.3,
             "endpoints": endpoints,
             "atom_types": AtomFeaturizer.default().atom_type_nums,
-            "bond_types:": BondFeaturizer.default().bond_type_nums,
+            "bond_types": BondFeaturizer.default().bond_type_nums,
         }
     run_experiment(BASE_CONFIG, pretrain_data, finetune_path, experiment_name, endpoints, seed=42)

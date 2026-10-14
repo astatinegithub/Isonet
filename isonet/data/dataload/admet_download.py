@@ -43,9 +43,23 @@ DATASETS = {
     "url": (
         "https://deepchemdata.s3-us-west-1.amazonaws.com/"
         "datasets/Lipophilicity.csv"
-    ),
-},
+        ),
+    },
 }
+# 중복되는건 이렇게 추가
+for key, filename in {
+    "ppbr_az": "PPBR_AZ.csv",
+    "clearance_microsome_az": "Clearance_Microsome_AZ.csv",
+    "cyp3a4_veith": "CYP3A4_Veith.csv",
+}.items():
+    DATASETS[key] = {
+        "filename": filename,
+        "url": (
+            f"https://huggingface.co/datasets/"
+            f"scikit-fingerprints/TDC_{key}/resolve/main/"
+            f"tdc_{key}.csv"
+        ),
+    }
 
 
 def download_dataset(name: str) -> Path:
@@ -65,4 +79,4 @@ def download_dataset(name: str) -> Path:
 if __name__ == "__main__":
     for name in DATASETS:
         print(name, download_dataset(name))
-        origin_raw_data = download_dataset("lipophilicity")
+        origin_raw_data = download_dataset("ppbr_az")

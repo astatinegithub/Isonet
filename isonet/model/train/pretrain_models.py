@@ -2,6 +2,7 @@ from rdkit import Chem
 import time
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from pathlib import Path 
 
 import torch
 import torch.nn as nn
@@ -106,9 +107,11 @@ def evaluate(model, val_loader, device, criterion):
 
 
 
-def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path, save_dir,
-                      epochs=20, lr=1e-3, plt_close=False):
+def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path,
+                      save_dir, checkpoint_path=None, epochs=20, lr=1e-3,
+                      plt_close=False, seed=25):
     # dataset
+    torch.manual_seed(seed)
     train_loader, val_loader = make_dataloader(train_graphs, val_graphs)
     print('maked a dataloader')
 
@@ -117,9 +120,17 @@ def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path, save_dir,
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
     loss_history = {'train_loss':[], 'val_loss':[]}
+    previous_epoch = 0
+
+    if isinstance(checkpoint_path, str|Path): # 이어서 학습
+        checkpoint = torch.load(checkpoint_path, weights_only=False)
+        previous_epoch = checkpoint['epoch'] + 1
+        model.load_state_dict(checkpoint['model'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        loss_history = checkpoint['loss_history']
 
     # train and valid
-    for epoch in range(epochs):
+    for epoch in range(previous_epoch, previous_epoch+epochs):
         train_loss = train_one_epoch(model, train_loader, optimizer, device, criterion) / len(train_loader) # batch수로 나누기
         val_loss = evaluate(model, val_loader, device, criterion) / len(val_loader) # batch수로 나누기
 
@@ -142,11 +153,21 @@ def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path, save_dir,
         )
 
     train_val_loss_graph(loss_history, loss_image_path, plt_close=plt_close)
-    return save_dir + f"/ssl_checkpoint_{epochs}epoch.pt"
+    return save_dir + f"/ssl_checkpoint_{previous_epoch+epochs-1}epoch_finish.pt"
 
 
 # if __name__ == "__main__":
-#     torch.manual_seed(25)
+    # torch.manual_seed(25)
+    # BASE_CONFIG = {
+    #             "atom_dim": 72,        # atom feature 차원
+    #             "bond_dim": 14,        # bond feature 차원
+    #             "hidden_dim": 512,
+    #             "depth": 5,
+    #             "drop_rate":0.3,
+    #             "atom_types": AtomFeaturizer.default().atom_type_nums,
+    #             "bond_types:": BondFeaturizer.default().bond_type_nums,
+    #         }
+#     
 #     ISONET_CONFIG = {
 #         "atom_dim": 72,        # atom feature 차원
 #         "bond_dim": 14,        # bond feature 차원

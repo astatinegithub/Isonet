@@ -10,3 +10,4 @@ checkpoint/
 *.egg-info
 
 output/
+__pycache__/

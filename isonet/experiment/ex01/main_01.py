@@ -12,15 +12,15 @@ from isonet.eval.downstream_evaluation import evaluate_model
 
 
 
-def run_experiment(origin_raw_data, experiment_name, endpoints, train_seed=42, split_seed=42):
+def run_experiment(cfg, origin_raw_data, experiment_name, endpoints, smiles_col, train_seed=42, split_seed=42):
 
     output_path1 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/finetuning_data1.pt"
     output_path2 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/finetuning_data2.pt"
     Path(ROOT + f"dataset/processed_data/ex01_{experiment_name}").mkdir(parents=True, exist_ok=True)
 
     if not(os.path.exists(output_path1) & os.path.exists(output_path2)):
-        make_fine_tuning_data(origin_raw_data, output_path1, endpoints, smiles_col='smiles', use_stereo=True)
-        make_fine_tuning_data(origin_raw_data, output_path2, endpoints, smiles_col='smiles', use_stereo=False)
+        make_fine_tuning_data(origin_raw_data, output_path1, endpoints, smiles_col=smiles_col, use_stereo=True)
+        make_fine_tuning_data(origin_raw_data, output_path2, endpoints, smiles_col=smiles_col, use_stereo=False)
 
     data_path1 = output_path1
     data_path2 = output_path2
@@ -36,43 +36,23 @@ def run_experiment(origin_raw_data, experiment_name, endpoints, train_seed=42, s
         seed=split_seed
     )
 
-
     # 검사
     data1 = train_graphs1.dataset
     data2 = train_graphs2.dataset
-
     if len(data1) != len(data2):
         raise ValueError("두 조건의 데이터 개수가 다릅니다.")
-
     for a, b in zip(data1, data2):
         if a.smiles != b.smiles:
             raise ValueError("두 조건의 분자 순서가 다릅니다.")
         torch.testing.assert_close(
             a.y, b.y, rtol=0, atol=0, equal_nan=True
         )
-
     for part1, part2 in zip(
         (train_graphs1, val_graphs1, test_graphs1),
         (train_graphs2, val_graphs2, test_graphs2),
     ):
         if part1.indices != part2.indices:
             raise ValueError("두 조건의 분할 인덱스가 다릅니다.")
-
-
-    # endpoint 설정
-
-
-    # config 설정
-    BASE_CONFIG = {
-        "atom_dim": 72,        # atom feature 차원
-        "bond_dim": 14,        # bond feature 차원
-        "dmpnn_hidden_dim": 512,
-        "admet_hidden_dim": 256,
-        "num_endpoint": len(endpoints.keys()), 
-        "depth": 5,
-        "drop_rate":0.3,
-        "endpoints": endpoints
-    }
 
 
     # 모델 2가지 생성
@@ -85,7 +65,7 @@ def run_experiment(origin_raw_data, experiment_name, endpoints, train_seed=42, s
     loss_image_path2 = ROOT + f"experiment/ex01/output/{experiment_name}/loss_curve2.png"
 
     model1, last_model_path1 = model_finetuning(
-        cfg=BASE_CONFIG,
+        cfg=cfg,
         train_graphs=train_graphs1,
         val_graphs=val_graphs1,
         loss_image_path=loss_image_path1,
@@ -97,7 +77,7 @@ def run_experiment(origin_raw_data, experiment_name, endpoints, train_seed=42, s
         seed=train_seed
     )
     model2, last_model_path2 = model_finetuning(
-        cfg=BASE_CONFIG,
+        cfg=cfg,
         train_graphs=train_graphs2,
         val_graphs=val_graphs2,
         loss_image_path=loss_image_path2,
@@ -132,11 +112,29 @@ def run_experiment(origin_raw_data, experiment_name, endpoints, train_seed=42, s
 
 if __name__ == "__main__":
     # 원하는 전처리 데이터 있는지 확인후 없으면 생성
-    origin_raw_data = ROOT + "dataset/raw/admet/Lipophilicity.csv"
-    endpoint_names = ["Lipophilicity"]
+    origin_raw_data = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
+    endpoint_names = ["PPBR_AZ"]
     endpoints = endpoints = {
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
     }
-    experiment_name = 'Lipophilicity_42seed_add_some_'
-    run_experiment(origin_raw_data, experiment_name, endpoints, train_seed=42, split_seed=25)
+    BASE_CONFIG = {
+            "atom_dim": 72,        # atom feature 차원
+            "bond_dim": 14,        # bond feature 차원
+            "hidden_dim": 512,
+            "admet_hidden_dim": 256,
+            "num_endpoint": len(endpoints.keys()), 
+            "depth": 5,
+            "drop_rate":0.3,
+            "endpoints": endpoints
+        }
+    experiment_name = 'PPBR_AZ_42seed'
+    run_experiment(
+        BASE_CONFIG,
+        origin_raw_data,
+        experiment_name,
+        endpoints,
+        smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
+        train_seed=42,
+        split_seed=25
+    )
