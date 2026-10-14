@@ -2,6 +2,7 @@ from copy import deepcopy
 
 from rdkit import Chem
 from rdkit.Chem.rdchem import Bond
+from rdkit.Chem import rdCIPLabeler
 
 import torch
 from torch import Tensor
@@ -44,6 +45,18 @@ def build_reverse_edge_index(edge_index: list) -> list:
 
 
 def mol2feature(mol: Chem.Mol, atomfeaturizer: AtomFeaturizer, bondfeaturizer: BondFeaturizer) -> Data:
+    Chem.AssignStereochemistry(
+        mol,
+        cleanIt=True,
+        force=True,
+    )
+
+    # 원자에 CIP 표지 부여
+    # 결합 feature는 기존 방식을 유지
+    rdCIPLabeler.AssignCIPLabels(
+        mol,
+        bondsToLabel=[],
+    )
     edge_attr  = []
     edge_index = []
 

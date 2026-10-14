@@ -12,7 +12,7 @@ from isonet.eval.downstream_evaluation import evaluate_model
 
 
 
-def run_experiment(origin_raw_data, experiment_name, endpoints):
+def run_experiment(origin_raw_data, experiment_name, endpoints, seed):
 
     output_path1 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/finetuning_data1.pt"
     output_path2 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/finetuning_data2.pt"
@@ -28,12 +28,12 @@ def run_experiment(origin_raw_data, experiment_name, endpoints):
     train_graphs1, val_graphs1, test_graphs1 = split_dataset(
         path=data_path1,
         split_ratio=[0.7, 0.2, 0.1],
-        seed=25
+        seed=seed
     )
     train_graphs2, val_graphs2, test_graphs2 = split_dataset(
         path=data_path2,
         split_ratio=[0.7, 0.2, 0.1],
-        seed=25
+        seed=seed
     )
 
 
@@ -93,7 +93,8 @@ def run_experiment(origin_raw_data, experiment_name, endpoints):
         pretrain_path=None,
         epochs=50,
         endpoints=endpoints,
-        plt_close=True
+        plt_close=True,
+        seed=seed
     )
     model2, last_model_path2 = model_finetuning(
         cfg=BASE_CONFIG,
@@ -104,7 +105,8 @@ def run_experiment(origin_raw_data, experiment_name, endpoints):
         pretrain_path=None,
         epochs=50,
         endpoints=endpoints,
-        plt_close=True
+        plt_close=True,
+        seed=seed
     )
 
     # best_model선정
@@ -136,5 +138,5 @@ if __name__ == "__main__":
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
     }
-    experiment_name = 'Lipophilicity'
-    run_experiment(origin_raw_data, experiment_name, endpoints)
+    experiment_name = 'Lipophilicity_42seed'
+    run_experiment(origin_raw_data, experiment_name, endpoints, seed=42)

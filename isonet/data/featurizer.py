@@ -49,11 +49,16 @@ class AtomFeaturizer(OneHotFeaturizer):
         degree = self.one_hot_unknown(a.GetDegree(), self.degrees)                      # 2. degree: 6 + unknown = 
         charge = self.one_hot_unknown(a.GetFormalCharge(), self.formal_charges)         # 3. formal charge: 5 + unknown = 6
 
-        if self.use_stereo:                                                             # 4. chirality: 4 + unknown = 5
-            chirality = self.one_hot_unknown(int(a.GetChiralTag()), self.chiral_tags)
+        if self.use_stereo:
+            cip_code = (
+                a.GetProp("_CIPCode")
+                if a.HasProp("_CIPCode")
+                else None
+            )
+            chirality = self.one_hot_unknown(cip_code, self.chiral_tags)
         else:
-            chirality = torch.zeros(5) # 중요: 제거하지 말고 5차원 그대로 0
-            
+            chirality = torch.zeros(len(self.chiral_tags) + 1, dtype=torch.float32)
+
         num_h = self.one_hot_unknown(a.GetTotalNumHs(), self.num_hs)                    # 5. H count: 5 + unknown = 6
         hybridization = self.one_hot_unknown(a.GetHybridization(), self.hybeidizations) # 6. hybridization: 7 + unknown = 8
         mass = torch.tensor([a.GetMass() / 100.0])                                      # 8. mass: 1
@@ -79,7 +84,7 @@ class AtomFeaturizer(OneHotFeaturizer):
         ATOM_NUMS = list(range(1, 37)) + [53]  # H ~ Kr + I
         DEGREES = [0, 1, 2, 3, 4, 5]
         FORMAL_CHARGES = [-2, -1, 0, 1, 2]
-        CHIRAL_TAGS = [0, 1, 2, 3]
+        CHIRAL_TAGS = ["R", "S", "r", "s"]
         NUM_HS = [0, 1, 2, 3, 4]
         HYBRIDIZATIONS = [
         Chem.rdchem.HybridizationType.S,
