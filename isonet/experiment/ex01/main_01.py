@@ -91,7 +91,7 @@ def run_experiment(origin_raw_data, experiment_name, endpoints):
         loss_image_path=loss_image_path1,
         save_dir=save_dir1,
         pretrain_path=None,
-        epochs=20,
+        epochs=50,
         endpoints=endpoints,
         plt_close=True
     )
@@ -102,7 +102,7 @@ def run_experiment(origin_raw_data, experiment_name, endpoints):
         loss_image_path=loss_image_path2,
         save_dir=save_dir2,
         pretrain_path=None,
-        epochs=20,
+        epochs=50,
         endpoints=endpoints,
         plt_close=True
     )
