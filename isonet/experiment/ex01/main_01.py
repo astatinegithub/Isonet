@@ -12,7 +12,9 @@ from isonet.eval.downstream_evaluation import evaluate_model
 
 
 
-def run_experiment(cfg, origin_raw_data, experiment_name, endpoints, smiles_col, train_seed=42, split_seed=42):
+def run_experiment(cfg, origin_raw_data, experiment_name,
+                   endpoints, smiles_col, epoch, 
+                   pretrain_path=None, train_seed=42, split_seed=42):
 
     output_path1 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/finetuning_data1.pt"
     output_path2 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/finetuning_data2.pt"
@@ -70,7 +72,7 @@ def run_experiment(cfg, origin_raw_data, experiment_name, endpoints, smiles_col,
         val_graphs=val_graphs1,
         loss_image_path=loss_image_path1,
         save_dir=save_dir1,
-        pretrain_path=None,
+        pretrain_path=pretrain_path,
         epochs=50,
         endpoints=endpoints,
         plt_close=True,
@@ -82,7 +84,7 @@ def run_experiment(cfg, origin_raw_data, experiment_name, endpoints, smiles_col,
         val_graphs=val_graphs2,
         loss_image_path=loss_image_path2,
         save_dir=save_dir2,
-        pretrain_path=None,
+        pretrain_path=pretrain_path,
         epochs=50,
         endpoints=endpoints,
         plt_close=True,
@@ -128,12 +130,14 @@ if __name__ == "__main__":
             "drop_rate":0.3,
             "endpoints": endpoints
         }
-    experiment_name = 'PPBR_AZ_42seed'
+    experiment_name = 'PPBR_AZ_42seed_add_pretrain'
     run_experiment(
         BASE_CONFIG,
         origin_raw_data,
         experiment_name,
         endpoints,
+        epoch=100,
+        pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
         train_seed=42,
         split_seed=25

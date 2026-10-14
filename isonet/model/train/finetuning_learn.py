@@ -124,7 +124,7 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
             weights_only=False
         )
         model.encoder.load_state_dict(checkpoint["encoder"])
-        loss_history = checkpoint["loss_history"]
+        # loss_history = checkpoint["loss_history"]
     
     # 불러오는거 아직 안만듦
     for epoch in range(epochs):
