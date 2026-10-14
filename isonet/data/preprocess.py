@@ -64,6 +64,33 @@ def mol2graph(mol, use_stereo, y=None): # 수정중
         bondfeaturizer=BondFeaturizer.default(use_stereo=use_stereo)
     ))
 
+    # 원자의 입체배치가 명시되어 있는가?
+    graph.has_atom_stereo = any(a.GetChiralTag() != Chem.rdchem.ChiralType.CHI_UNSPECIFIED for a in mol.GetAtoms())
+
+    # 결합의 입체배치가 명시되어 있는가?
+    # NONE과 ANY는 특정 입체배치가 지정된 경우에서 제외
+    graph.has_bond_stereo = any(
+        b.GetStereo() not in (
+            Chem.rdchem.BondStereo.STEREONONE,
+            Chem.rdchem.BondStereo.STEREOANY,
+        )
+        for b in mol.GetBonds()
+    )
+
+    graph.has_stereo = (graph.has_atom_stereo or graph.has_bond_stereo)
+
+    # 분자 내 R/S/r/s 원자 개수
+    labels = [
+        a.GetProp("_CIPCode")
+        for a in mol.GetAtoms()
+        if a.HasProp("_CIPCode")
+    ]
+
+    # (1, 4): 배치로 묶으면 (batch_size, 4)가 됨
+    graph.cip_counts = torch.tensor(
+        [[labels.count(c) for c in ("R", "S", "r", "s")]],
+        dtype=torch.long,
+    )
     graph.smiles = Chem.MolToSmiles(mol, isomericSmiles=True)
 
     if y is not None:
