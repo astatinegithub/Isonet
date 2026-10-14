@@ -50,6 +50,7 @@ def train_val_loss_graph(loss_history: dict[list], save_path=None, dpi=300, plt_
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
+    plt.grid()
     plt.tight_layout()
     if save_path is not None:
         plt.savefig(save_path, dpi=dpi)
@@ -124,7 +125,7 @@ def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path,
 
     if isinstance(checkpoint_path, str|Path): # 이어서 학습
         checkpoint = torch.load(checkpoint_path, weights_only=False)
-        previous_epoch = checkpoint['epoch'] + 1
+        previous_epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         loss_history = checkpoint['loss_history']

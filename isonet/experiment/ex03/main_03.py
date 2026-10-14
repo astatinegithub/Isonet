@@ -38,7 +38,7 @@ def run_experiment(cfg, pretrain_data, experiment_name, train_seed, split_seed, 
         loss_image_path=loss_image_path1_1,
         save_dir=save_dir1_1,
         checkpoint_path=checkpoint_path,
-        epochs=50,
+        epochs=30,
         plt_close=True,
         seed=train_seed
     )
@@ -46,7 +46,7 @@ def run_experiment(cfg, pretrain_data, experiment_name, train_seed, split_seed, 
 
 if __name__ == "__main__":
     pretrain_data = ROOT + "dataset/raw/smiles/Compound_000500001_001000000.sdf"
-    experiment_name = 'pretrain_share'
+    experiment_name = 'pretrain_share2'
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
             "bond_dim": 14,        # bond feature 차원

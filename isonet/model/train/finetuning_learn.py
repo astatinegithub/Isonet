@@ -72,6 +72,7 @@ def train_val_loss_graph(loss_history: dict[list], save_path=None, dpi=300, plt_
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
+    plt.grid()
     plt.tight_layout()
     if save_path is not None:
         plt.savefig(save_path, dpi=dpi)
