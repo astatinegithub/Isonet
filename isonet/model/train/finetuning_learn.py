@@ -125,7 +125,7 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
         )
         model.encoder.load_state_dict(checkpoint["encoder"])
         # loss_history = checkpoint["loss_history"]
-    
+    best_loss = float('inf')
     # 불러오는거 아직 안만듦
     for epoch in range(epochs):
         train_total_loss = train_one_epoch(model, train_loader, optimizer, device, criterion_r, criterion_b, endpoints)
@@ -149,8 +149,23 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
                     "loss_history": loss_history,
                     "cfg": cfg
                 },
-                save_dir / f"finetune_epoch_{epoch + 1}.pt"
+                save_dir / f"finetune_train_epoch_{epoch + 1}.pt"
             )
+        if val_loss < best_loss:
+            best_loss = float(val_loss)
+            torch.save(
+                {
+                    "encoder": model.encoder.state_dict(),
+                    "heads": model.heads.state_dict(),
+                    "optimizer": optimizer.state_dict(),
+                    "model": model.state_dict(),
+                    "epoch": epoch,
+                    "loss_history": loss_history,
+                    "cfg": cfg
+                },
+                save_dir / f"finetune_val_best.pt"
+            )
+        
 
     torch.save(
         {

@@ -11,7 +11,7 @@ def plot_loss_graph(path: str|Path, title=None, ylable='loss', xlabel='epoch',
 
     checkpoint = torch.load(path, weights_only=False, map_location='cpu')
     loss_history = checkpoint['loss_history']
-    len_epoch = range(1, 1+len(loss_history['train_loss']))
+    len_epoch = range(10, 1+len(loss_history['train_loss']))
     if title==None:
         title = f"loss graph of {str(path).replace("\\", "/").split('/')[-1]}"
         
@@ -22,12 +22,12 @@ def plot_loss_graph(path: str|Path, title=None, ylable='loss', xlabel='epoch',
     plt.xlabel(xlabel)
     plt.grid(visible=grid_visible)
     plt.legend('upper left')
-    plt.plot(len_epoch, loss_history['train_loss'])
-    plt.plot(len_epoch, loss_history['val_loss'])
+    plt.plot(len_epoch, loss_history['train_loss'][9:])
+    plt.plot(len_epoch, loss_history['val_loss'][9:])
     plt.show()
     output_path = ROOT + 'model/utils/temp/loss_graph.png'
     plt.savefig(output_path, dpi=200)
 
 
 if __name__ == "__main__":
-    plot_loss_graph(ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt')
+    plot_loss_graph(ROOT + '/experiment/ex01/output/PPBR_AZ_42seed_manyepoch/checkpoint2/finish_train_epoch_10000.pt', figsize=(20, 3))

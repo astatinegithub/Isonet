@@ -2,6 +2,7 @@ import os
 import torch
 from pathlib import Path
 from copy import deepcopy
+from torch_geometric.nn import global_mean_pool
 
 from isonet.config import ROOT, ALL_ENDPOINTS
 from isonet.data.dataset import split_dataset 
@@ -14,7 +15,7 @@ from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 
 
-def run_experiment(cfg, finetune_data, pretrain_data, experiment_name, endpoints, train_seed, split_seed):
+def run_experiment(cfg, pretrain_data, finetune_data, experiment_name, endpoints, train_seed, split_seed):
 
     output_path1_1 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/pretrain_data1.pt"
     output_path1_2 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/finetuning_data1.pt"
@@ -89,7 +90,8 @@ def run_experiment(cfg, finetune_data, pretrain_data, experiment_name, endpoints
         loss_image_path=loss_image_path1_1,
         save_dir=save_dir1_1,
         epochs=30,
-        plt_close=True
+        plt_close=True,
+        seed=train_seed
     )
     model1, last_model_path1 = model_finetuning(
         cfg=cfg,
@@ -159,4 +161,15 @@ if __name__ == "__main__":
             "atom_types": AtomFeaturizer.default().atom_type_nums,
             "bond_types": BondFeaturizer.default().bond_type_nums,
         }
-    run_experiment(BASE_CONFIG, pretrain_data, finetune_path, experiment_name, endpoints, seed=42)
+    
+
+    BASE_CONFIG["pooling"] = global_mean_pool
+    run_experiment(
+        BASE_CONFIG,
+        pretrain_data,
+        finetune_path, 
+        experiment_name, 
+        endpoints, 
+        train_seed=42,
+        split_seed=25
+    )

@@ -128,20 +128,22 @@ if __name__ == "__main__":
             "bond_dim": 14,        # bond feature 차원
             "hidden_dim": 512,
             "admet_hidden_dim": 256,
-            # "pooling": global_mean_pool,
+            "pooling": global_mean_pool,
             "num_endpoint": len(endpoints.keys()), 
             "depth": 5,
             "drop_rate":0.3,
             "endpoints": endpoints
         }
-    experiment_name = 'PPBR_AZ_42seed_add_pretrain'
+    experiment_name = 'PPBR_AZ_42seed_manyepoch'
     run_experiment(
         BASE_CONFIG,
         origin_raw_data,
         experiment_name,
         endpoints,
-        epochs=100,
-        pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
+        epochs=10000,
+        save_freq=100,
+        pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share_retrain_mean_pool2/checkpoint1_1/ssl_checkpoint_119epoch.pt',
+        # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
         train_seed=42,
         split_seed=25

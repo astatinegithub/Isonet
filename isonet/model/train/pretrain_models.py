@@ -131,6 +131,7 @@ def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path,
         loss_history = checkpoint['loss_history']
 
     # train and valid
+    best_loss = torch.inf
     for epoch in range(previous_epoch, previous_epoch+epochs):
         train_loss = train_one_epoch(model, train_loader, optimizer, device, criterion) / len(train_loader) # batch수로 나누기
         val_loss = evaluate(model, val_loader, device, criterion) / len(val_loader) # batch수로 나누기
@@ -152,9 +153,23 @@ def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path,
             },
             save_dir + f"/ssl_checkpoint_{epoch+1}epoch.pt"
         )
-
+        if val_loss < best_loss:
+            best_loss = float(val_loss)
+            torch.save(
+                {
+                    "encoder": model.encoder.state_dict(),
+                    "atom_head": model.atom_head.state_dict(),
+                    "bond_head": model.bond_head.state_dict(),
+                    "optimizer": optimizer.state_dict(),
+                    "model": model.state_dict(),
+                    "epoch": epoch,
+                    "loss_history": loss_history,
+                    "cfg":cfg 
+                },
+                save_dir + f"/ssl_checkpoint_val_best.pt"
+            )
     train_val_loss_graph(loss_history, loss_image_path, plt_close=plt_close)
-    return save_dir + f"/ssl_checkpoint_{previous_epoch+epochs-1}epoch_finish.pt"
+    return save_dir + f"/ssl_checkpoint_val_best.pt"
 
 
 # if __name__ == "__main__":
