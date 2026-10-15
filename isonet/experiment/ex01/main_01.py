@@ -2,6 +2,7 @@ import os
 import torch
 from pathlib import Path
 from copy import deepcopy
+from torch_geometric.nn import global_mean_pool
 
 from isonet.config import ROOT, ALL_ENDPOINTS
 from isonet.data.dataset import split_dataset 
@@ -13,7 +14,7 @@ from isonet.eval.downstream_evaluation import evaluate_model
 
 
 def run_experiment(cfg, origin_raw_data, experiment_name,
-                   endpoints, smiles_col, epoch, 
+                   endpoints, smiles_col, epochs, save_freq=1,
                    pretrain_path=None, train_seed=42, split_seed=42):
 
     output_path1 = ROOT + f"dataset/processed_data/ex01_{experiment_name}/finetuning_data1.pt"
@@ -73,10 +74,11 @@ def run_experiment(cfg, origin_raw_data, experiment_name,
         loss_image_path=loss_image_path1,
         save_dir=save_dir1,
         pretrain_path=pretrain_path,
-        epochs=50,
+        epochs=epochs,
         endpoints=endpoints,
         plt_close=True,
-        seed=train_seed
+        seed=train_seed,
+        save_freq=save_freq
     )
     model2, last_model_path2 = model_finetuning(
         cfg=cfg,
@@ -85,10 +87,11 @@ def run_experiment(cfg, origin_raw_data, experiment_name,
         loss_image_path=loss_image_path2,
         save_dir=save_dir2,
         pretrain_path=pretrain_path,
-        epochs=50,
+        epochs=epochs,
         endpoints=endpoints,
         plt_close=True,
-        seed=train_seed
+        seed=train_seed,
+        save_freq=save_freq
     )
 
     # best_model선정
@@ -125,6 +128,7 @@ if __name__ == "__main__":
             "bond_dim": 14,        # bond feature 차원
             "hidden_dim": 512,
             "admet_hidden_dim": 256,
+            # "pooling": global_mean_pool,
             "num_endpoint": len(endpoints.keys()), 
             "depth": 5,
             "drop_rate":0.3,
@@ -136,7 +140,7 @@ if __name__ == "__main__":
         origin_raw_data,
         experiment_name,
         endpoints,
-        epoch=100,
+        epochs=100,
         pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
         train_seed=42,

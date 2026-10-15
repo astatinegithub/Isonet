@@ -2,6 +2,7 @@ import os
 import torch
 from pathlib import Path
 from copy import deepcopy
+from torch_geometric.nn import global_mean_pool
 
 from isonet.config import ROOT, ALL_ENDPOINTS
 from isonet.data.dataset import split_dataset 
@@ -38,29 +39,41 @@ def run_experiment(cfg, pretrain_data, experiment_name, train_seed, split_seed, 
         loss_image_path=loss_image_path1_1,
         save_dir=save_dir1_1,
         checkpoint_path=checkpoint_path,
-        epochs=30,
+        epochs=60,
         plt_close=True,
         seed=train_seed
     )
 
 
 if __name__ == "__main__":
-    pretrain_data = ROOT + "dataset/raw/smiles/Compound_000500001_001000000.sdf"
-    experiment_name = 'pretrain_share2'
+    # pretrain_data = ROOT + "dataset/raw/smiles/Compound_000000001_000500000.sdf"
+    # experiment_name = 'pretrain_share_retrain_mean_pool'
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
             "bond_dim": 14,        # bond feature 차원
             "hidden_dim": 512,
             "depth": 5,
             "drop_rate":0.3,
+            "pooling":global_mean_pool,
             "atom_types": AtomFeaturizer.default().atom_type_nums,
             "bond_types": BondFeaturizer.default().bond_type_nums,
         }
+    # run_experiment(
+    #     BASE_CONFIG,
+    #     pretrain_data,
+    #     experiment_name,
+    #     train_seed=42,
+    #     split_seed=25, 
+    #     # checkpoint_path=ROOT+'/experiment/ex03/output/pretrain_share_retrain_mean_pool/checkpoint1_1/ssl_checkpoint_60epoch_finish.pt'
+    # )
+    experiment_name = 'pretrain_share_retrain_mean_pool2'
+
+    pretrain_data = ROOT + "dataset/raw/smiles/Compound_000500001_001000000.sdf"
     run_experiment(
         BASE_CONFIG,
         pretrain_data,
         experiment_name,
         train_seed=42,
         split_seed=25, 
-        checkpoint_path=ROOT+'/experiment/ex03/output/pretrain_share/checkpoint1_1/ssl_checkpoint_49epoch_finish.pt'
+        checkpoint_path=ROOT+'/experiment/ex03/output/pretrain_share_retrain_mean_pool/checkpoint1_1/ssl_checkpoint_60epoch.pt'
     )

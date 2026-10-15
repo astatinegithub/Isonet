@@ -125,7 +125,7 @@ def model_pretraining(cfg, train_graphs, val_graphs, loss_image_path,
 
     if isinstance(checkpoint_path, str|Path): # 이어서 학습
         checkpoint = torch.load(checkpoint_path, weights_only=False)
-        previous_epoch = checkpoint['epoch']
+        previous_epoch = checkpoint['epoch']+1
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         loss_history = checkpoint['loss_history']

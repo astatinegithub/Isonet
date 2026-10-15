@@ -20,7 +20,7 @@ class IsonetModel(nn.Module):
         )
         self.use_stereo_attention = cfg.get("use_stereo_attention", False)
         
-        self.pool = global_add_pool # 임시pooling 방식
+        self.pool = cfg.get('pooling', global_add_pool) # 임시pooling 방식
         self.heads = nn.ModuleDict({
             admet : nn.Sequential(
                 nn.Linear(cfg['hidden_dim'], cfg['admet_hidden_dim']),
