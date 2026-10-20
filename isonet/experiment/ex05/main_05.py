@@ -2,7 +2,7 @@ import os
 import torch
 from pathlib import Path
 from copy import deepcopy
-from torch_geometric.nn import global_mean_pool
+from torch_geometric.nn import global_mean_pool, global_add_pool
 
 from isonet.config import ROOT, ALL_ENDPOINTS
 from isonet.data.dataset import split_dataset 
@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     # 저장 dir 이름 변경
     train_seed = 40
-    experiment_name = f'PPBR_AZ_{train_seed}seed_attn_test'
+    experiment_name = f'PPBR_AZ_{train_seed}seed_attn_test_lr1e4_mean'
     
 
     BASE_CONFIG = {

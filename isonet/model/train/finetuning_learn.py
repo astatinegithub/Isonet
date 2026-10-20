@@ -118,7 +118,19 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = IsonetModel(cfg).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    # lr 서로 다르게 하기
+    param_groups = [
+        {"params": model.encoder.parameters(), "lr": 1e-4},
+        {"params": model.heads.parameters(), "lr": lr},
+    ]
+
+    if model.use_stereo_attention:
+        param_groups.append({
+            "params": model.stereo_attention.parameters(),
+            "lr": lr,
+        })
+
+    optimizer = torch.optim.AdamW(param_groups, lr=lr)
     criterion_r = nn.MSELoss()
     criterion_b = F.binary_cross_entropy_with_logits
 
