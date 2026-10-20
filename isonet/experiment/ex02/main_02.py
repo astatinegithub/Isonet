@@ -17,7 +17,7 @@ from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 def run_experiment(cfg, pretrain_data, finetune_data, experiment_name,
                    endpoints, train_seed, split_seed, pre_epochs=30,
-                   fine_epochs=50, smiles_col='smiles'):
+                   fine_epochs=50, smiles_col='smiles', pretrained_checkpoint=None):
 
     output_path1_1 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/pretrain_data1.pt"
     output_path1_2 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/finetuning_data1.pt"
@@ -84,17 +84,19 @@ def run_experiment(cfg, pretrain_data, finetune_data, experiment_name,
     loss_image_path1_2 = ROOT + f"experiment/ex02/output/{experiment_name}/loss_curve1_2.png"
     loss_image_path2 = ROOT + f"experiment/ex02/output/{experiment_name}/loss_curve2.png"
 
-
-    pretrain_last_model_path = model_pretraining(
-        cfg=cfg,
-        train_graphs=train_graphs1_1,
-        val_graphs=val_graphs1_1,
-        loss_image_path=loss_image_path1_1,
-        save_dir=save_dir1_1,
-        epochs=pre_epochs,
-        plt_close=True,
-        seed=train_seed
-    )
+    if pretrained_checkpoint is None:
+        pretrain_last_model_path = model_pretraining(
+            cfg=cfg,
+            train_graphs=train_graphs1_1,
+            val_graphs=val_graphs1_1,
+            loss_image_path=loss_image_path1_1,
+            save_dir=save_dir1_1,
+            epochs=pre_epochs,
+            plt_close=True,
+            seed=train_seed
+        )
+    else: 
+        pretrain_last_model_path = pretrained_checkpoint
     model1, last_model_path1 = model_finetuning(
         cfg=cfg,
         train_graphs=train_graphs1_2,
@@ -149,7 +151,7 @@ if __name__ == "__main__":
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
     }
-    experiment_name = 'PPBR_AZ_20seed'
+    experiment_name = 'PPBR_AZ_20seed_re'
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
             "bond_dim": 14,        # bond feature 차원
@@ -172,6 +174,7 @@ if __name__ == "__main__":
         endpoints, 
         fine_epochs=100,
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
-        train_seed=20,
-        split_seed=25
+        train_seed=42,
+        split_seed=25,
+        pretrained_checkpoint=ROOT + "dataset/processed_data/ex02_PPBR_AZ_42seed/pretrain_data1.pt"
     )

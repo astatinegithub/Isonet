@@ -20,7 +20,14 @@ class IsonetModel(nn.Module):
             cfg["depth"]
         )
         self.use_stereo_attention = cfg.get("use_stereo_attention", False)
-        # self.stereo_attention = StereoAttention(cfg)
+        if self.use_stereo_attention:
+            self.stereo_attention = StereoAttention(
+                hidden_dim=cfg['hidden_dim'],
+                bond_dim=cfg['bond_dim'],
+                attn_dim=cfg['attn_dim'],
+                dropout=cfg['attn_droprate'],
+                cip_start=51,                
+            )
         self.pool = cfg.get('pooling', global_add_pool) # 임시pooling 방식
         self.heads = nn.ModuleDict({
             admet : nn.Sequential(
@@ -36,14 +43,14 @@ class IsonetModel(nn.Module):
         h, _ = self.encoder(data)
         if self.use_stereo_attention:
             pass
-            # h, attention = self.stereo_attention(h)
+            h, attention = self.stereo_attention(h, data)
         h = self.pool(h, data.batch)
 
         return {name: head(h) for name, head in self.heads.items()}
 
 
 
-# 임시
+# 임시 나중에 맘에 안드는 코드 수정할꺼임
 class StereoAttention(nn.Module):
     def __init__(
         self,
@@ -139,7 +146,7 @@ class StereoAttention(nn.Module):
         context = context.index_add(0, group, messages)
 
         gate = torch.sigmoid(self.gate(center_input))
-        update = gate * self.dropout(self.output(context))
+        update = gate * self.dropout(self.W_output(context))
 
         # 입체중심 위치에만 보정값을 더한다.
         # 나머지 원자의 표현은 변경하지 않는다.

@@ -84,15 +84,23 @@ def train_val_loss_graph(loss_history: dict[list], save_path=None, dpi=300, plt_
 
 @torch.no_grad()
 def evaluate(model, val_loader, device, criterion_r, criterion_b, endpoints, target_idx=0) -> dict[int, dict]:
-    val_total_loss = 0
     model.eval()
+    val_total_loss = 0.0
+    val_total_count = 0
+
     for batch in tqdm(val_loader):
         batch = batch.to(device)
         pred = model(batch)
-        loss = compute_loss(pred, batch, criterion_r, criterion_b, endpoints)
-        val_total_loss += loss.item()
+        loss = compute_loss(
+            pred, batch, criterion_r, criterion_b, endpoints
+        )
 
-    return val_total_loss
+        # PPBR_AZ 정답이 있는 분자 수
+        n = (~torch.isnan(batch.y[:, 0])).sum().item()
+        val_total_loss += loss.item() * n
+        val_total_count += n
+
+    return val_total_loss / val_total_count
 
 
 def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, pretrain_path=None,
@@ -132,7 +140,7 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
         val_total_loss = evaluate(model, val_loader, device, criterion_r, criterion_b, endpoints)
 
         train_loss = train_total_loss / len(train_loader)
-        val_loss = val_total_loss / len(val_loader)
+        val_loss = val_total_loss # 미리 나누는 걸로 바꿈 / len(val_loader)
 
         loss_history["train_loss"].append(train_loss)
         loss_history["val_loss"].append(val_loss)
@@ -184,14 +192,15 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
 
 
 if __name__ == "__main__":
-    trian_graphs, val_graphs, _ = split_dataset(ROOT + "dataset/processed_data/Lipophilicity_processed.pt", split_ratio=[0.8, 0.2, 0])
-    model_finetuning(
-        cfg=MODEL_A_CONFIG,
-        trian_graphs=trian_graphs,
-        val_graphs=val_graphs,
-        loss_image_path=ROOT + "model/expir0/loss_curve.png",
-        save_dir=ROOT+'model/expir0',
-        pretrain_path=ROOT + "model/checkpoint/model_A/ssl_checkpoint_29epoch.pt",
-        epochs=20,
-        save_freq=1
-    )
+    ...
+    # trian_graphs, val_graphs, _ = split_dataset(ROOT + "dataset/processed_data/Lipophilicity_processed.pt", split_ratio=[0.8, 0.2, 0])
+    # model_finetuning(
+    #     cfg=MODEL_A_CONFIG,
+    #     trian_graphs=trian_graphs,
+    #     val_graphs=val_graphs,
+    #     loss_image_path=ROOT + "model/expir0/loss_curve.png",
+    #     save_dir=ROOT+'model/expir0',
+    #     pretrain_path=ROOT + "model/checkpoint/model_A/ssl_checkpoint_29epoch.pt",
+    #     epochs=20,
+    #     save_freq=1
+    # )

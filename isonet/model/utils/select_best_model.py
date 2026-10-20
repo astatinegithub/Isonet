@@ -20,7 +20,6 @@ def select_best_model(last_model_path, save_dir) -> str:
     elif os.path.exists(save_dir / f"finish_train_epoch_{best_epoch+1}.pt"):
         return save_dir / f"finish_train_epoch_{best_epoch+1}.pt"
     elif os.path.exists(save_dir / f"finetune_val_best.pt"):
-        print('aaaaa')
         return save_dir / f"finetune_val_best.pt"
     else:
         raise ValueError("best model파일이 경로에 존재하지 않습니다.")
