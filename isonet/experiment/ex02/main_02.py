@@ -15,23 +15,21 @@ from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 
 
-def run_experiment(cfg, pretrain_data, finetune_data, experiment_name,
+def run_experiment(cfg, processed_data, finetune_data, experiment_name,
                    endpoints, train_seed, split_seed, pre_epochs=30,
                    fine_epochs=50, smiles_col='smiles', pretrained_checkpoint=None):
 
-    output_path1_1 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/pretrain_data1.pt"
+    # output_path1_1 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/pretrain_data1.pt"
     output_path1_2 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/finetuning_data1.pt"
     output_path2 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/finetuning_data2.pt"
-    
     Path(ROOT + f"dataset/processed_data/ex02_{experiment_name}").mkdir(parents=True, exist_ok=True)
 
-    if not(os.path.exists(output_path1_1) & os.path.exists(output_path1_2) & os.path.exists(output_path2)):
-        make_pretrain_data(pretrain_data, output_path1_1, use_stereo=True, max_len=200000)
+    if not(os.path.exists(output_path1_2) & os.path.exists(output_path2)):
         make_fine_tuning_data(finetune_data, output_path1_2, endpoints, smiles_col=smiles_col, use_stereo=True)
         make_fine_tuning_data(finetune_data, output_path2, endpoints, smiles_col=smiles_col, use_stereo=True)
         
 
-    data_path1_1 = output_path1_1
+    data_path1_1 = processed_data
     data_path1_2 = output_path1_2
     data_path2 = output_path2
 
@@ -143,15 +141,25 @@ def run_experiment(cfg, pretrain_data, finetune_data, experiment_name,
         output_file_number=2
     )
 
+
+def make_pretrain_dataset(in_path, out_path):
+    if not os.path.exists(out_path):
+        make_pretrain_data(in_path, out_path, use_stereo=True, max_len=200000)
+    else:
+        print('이미 데이터셋이 있음')
+
 if __name__ == "__main__":
     pretrain_data = ROOT + "dataset/raw/smiles/Compound_000000001_000500000.sdf"
+    processed_data = ROOT + "/dataset/processed_data/processed_smiles/" + pretrain_data.split('/')[-1][:-4]
     finetune_path = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
     endpoint_names = ["PPBR_AZ"]
     endpoints = endpoints = {
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
     }
-    experiment_name = 'PPBR_AZ_20seed_re'
+    train_seed = 20
+    experiment_name = f'PPBR_AZ_{train_seed}seed_re'
+
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
             "bond_dim": 14,        # bond feature 차원
@@ -166,15 +174,16 @@ if __name__ == "__main__":
         }
 
     BASE_CONFIG["pooling"] = global_mean_pool
+    make_pretrain_dataset(pretrain_data, processed_data)
+
     run_experiment(
         BASE_CONFIG,
-        pretrain_data,
+        processed_data,
         finetune_path, 
         experiment_name, 
         endpoints, 
         fine_epochs=100,
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
-        train_seed=42,
+        train_seed=train_seed,
         split_seed=25,
-        pretrained_checkpoint=ROOT + "dataset/processed_data/ex02_PPBR_AZ_42seed/pretrain_data1.pt"
     )

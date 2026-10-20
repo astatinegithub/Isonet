@@ -20,14 +20,6 @@ class IsonetModel(nn.Module):
             cfg["depth"]
         )
         self.use_stereo_attention = cfg.get("use_stereo_attention", False)
-        if self.use_stereo_attention:
-            self.stereo_attention = StereoAttention(
-                hidden_dim=cfg['hidden_dim'],
-                bond_dim=cfg['bond_dim'],
-                attn_dim=cfg['attn_dim'],
-                dropout=cfg['attn_droprate'],
-                cip_start=51,                
-            )
         self.pool = cfg.get('pooling', global_add_pool) # 임시pooling 방식
         self.heads = nn.ModuleDict({
             admet : nn.Sequential(
@@ -37,6 +29,14 @@ class IsonetModel(nn.Module):
                 nn.Linear(cfg['admet_hidden_dim'], 1)
             ) for admet in cfg['endpoints']
         })
+        if self.use_stereo_attention:
+            self.stereo_attention = StereoAttention(
+                hidden_dim=cfg['hidden_dim'],
+                bond_dim=cfg['bond_dim'],
+                attn_dim=cfg['attn_dim'],
+                dropout=cfg['attn_droprate'],
+                cip_start=51,                
+            )
 
 
     def forward(self, data: MolGraph):

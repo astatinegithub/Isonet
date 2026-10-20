@@ -26,7 +26,7 @@ def run_experiment(cfg1, cfg2, origin_raw_data, experiment_name,
 
     if not(os.path.exists(output_path1) & os.path.exists(output_path2)):
         make_fine_tuning_data(origin_raw_data, output_path1, endpoints, smiles_col=smiles_col, use_stereo=True)
-        make_fine_tuning_data(origin_raw_data, output_path2, endpoints, smiles_col=smiles_col, use_stereo=False)
+        make_fine_tuning_data(origin_raw_data, output_path2, endpoints, smiles_col=smiles_col, use_stereo=True)
 
     data_path1 = output_path1
     data_path2 = output_path2
@@ -126,6 +126,8 @@ if __name__ == "__main__":
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
     }
+
+    # 저장 dir 이름 변경
     train_seed = 25
     experiment_name = f'PPBR_AZ_{train_seed}seed_attn_test'
     
@@ -141,15 +143,14 @@ if __name__ == "__main__":
             "drop_rate":0.3,
             "endpoints": endpoints
         }
-
-
     cfg1 = BASE_CONFIG.copy()
     cfg2 = BASE_CONFIG.copy()
-
+    
     cfg1['use_stereo_attention'] = True
-    cfg1['bond_dim'] = ...
     cfg1['attn_dim'] = 64
     cfg1['attn_droprate'] = 0.2
+
+    cfg2['use_stereo_attention'] = False
 
 
 
