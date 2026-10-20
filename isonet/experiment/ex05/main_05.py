@@ -128,7 +128,7 @@ if __name__ == "__main__":
     }
 
     # 저장 dir 이름 변경
-    train_seed = 25
+    train_seed = 40
     experiment_name = f'PPBR_AZ_{train_seed}seed_attn_test'
     
 
@@ -143,13 +143,13 @@ if __name__ == "__main__":
             "drop_rate":0.3,
             "endpoints": endpoints
         }
-    cfg1 = BASE_CONFIG.copy()
-    cfg2 = BASE_CONFIG.copy()
     
+    cfg1 = BASE_CONFIG.copy()
     cfg1['use_stereo_attention'] = True
     cfg1['attn_dim'] = 64
     cfg1['attn_droprate'] = 0.2
 
+    cfg2 = BASE_CONFIG.copy()
     cfg2['use_stereo_attention'] = False
 
 
