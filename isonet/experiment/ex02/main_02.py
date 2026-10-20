@@ -15,7 +15,9 @@ from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 
 
-def run_experiment(cfg, pretrain_data, finetune_data, experiment_name, endpoints, train_seed, split_seed):
+def run_experiment(cfg, pretrain_data, finetune_data, experiment_name,
+                   endpoints, train_seed, split_seed, pre_epochs=30,
+                   fine_epochs=50, smiles_col='smiles'):
 
     output_path1_1 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/pretrain_data1.pt"
     output_path1_2 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/finetuning_data1.pt"
@@ -24,9 +26,9 @@ def run_experiment(cfg, pretrain_data, finetune_data, experiment_name, endpoints
     Path(ROOT + f"dataset/processed_data/ex02_{experiment_name}").mkdir(parents=True, exist_ok=True)
 
     if not(os.path.exists(output_path1_1) & os.path.exists(output_path1_2) & os.path.exists(output_path2)):
-        make_pretrain_data(pretrain_data, output_path1_1, use_stereo=True)
-        make_fine_tuning_data(finetune_data, output_path1_2, endpoints, smiles_col='smiles', use_stereo=True)
-        make_fine_tuning_data(finetune_data, output_path2, endpoints, smiles_col='smiles', use_stereo=True)
+        make_pretrain_data(pretrain_data, output_path1_1, use_stereo=True, max_len=200000)
+        make_fine_tuning_data(finetune_data, output_path1_2, endpoints, smiles_col=smiles_col, use_stereo=True)
+        make_fine_tuning_data(finetune_data, output_path2, endpoints, smiles_col=smiles_col, use_stereo=True)
         
 
     data_path1_1 = output_path1_1
@@ -89,7 +91,7 @@ def run_experiment(cfg, pretrain_data, finetune_data, experiment_name, endpoints
         val_graphs=val_graphs1_1,
         loss_image_path=loss_image_path1_1,
         save_dir=save_dir1_1,
-        epochs=30,
+        epochs=pre_epochs,
         plt_close=True,
         seed=train_seed
     )
@@ -100,7 +102,7 @@ def run_experiment(cfg, pretrain_data, finetune_data, experiment_name, endpoints
         loss_image_path=loss_image_path1_2,
         save_dir=save_dir1_2,
         pretrain_path=pretrain_last_model_path,
-        epochs=50,
+        epochs=fine_epochs,
         endpoints=endpoints,
         plt_close=True,
         seed=train_seed
@@ -112,7 +114,7 @@ def run_experiment(cfg, pretrain_data, finetune_data, experiment_name, endpoints
         loss_image_path=loss_image_path2,
         save_dir=save_dir2,
         pretrain_path=None,
-        epochs=50,
+        epochs=fine_epochs,
         endpoints=endpoints,
         plt_close=True,
         seed=train_seed
@@ -140,15 +142,14 @@ def run_experiment(cfg, pretrain_data, finetune_data, experiment_name, endpoints
     )
 
 if __name__ == "__main__":
-    # 원하는 전처리 데이터 있는지 확인후 없으면 생성
-    pretrain_data = ROOT + "dataset/raw/Compound_000000001_000500000.sdf"
-    finetune_path = ROOT + "dataset/raw/admet/Lipophilicity.csv"
-    endpoint_names = ["Lipophilicity"]
+    pretrain_data = ROOT + "dataset/raw/smiles/Compound_000000001_000500000.sdf"
+    finetune_path = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
+    endpoint_names = ["PPBR_AZ"]
     endpoints = endpoints = {
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
     }
-    experiment_name = 'Lipophilicity_42seed'
+    experiment_name = 'PPBR_AZ_20seed'
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
             "bond_dim": 14,        # bond feature 차원
@@ -161,7 +162,6 @@ if __name__ == "__main__":
             "atom_types": AtomFeaturizer.default().atom_type_nums,
             "bond_types": BondFeaturizer.default().bond_type_nums,
         }
-    
 
     BASE_CONFIG["pooling"] = global_mean_pool
     run_experiment(
@@ -170,6 +170,8 @@ if __name__ == "__main__":
         finetune_path, 
         experiment_name, 
         endpoints, 
-        train_seed=42,
+        fine_epochs=100,
+        smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
+        train_seed=20,
         split_seed=25
     )

@@ -115,7 +115,6 @@ def run_experiment(cfg1, cfg2, origin_raw_data, experiment_name,
     )
 
 if __name__ == "__main__":
-    # 원하는 전처리 데이터 있는지 확인후 없으면 생성
     origin_raw_data = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
     endpoint_names = ["PPBR_AZ"]
     endpoints = endpoints = {

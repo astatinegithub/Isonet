@@ -2,7 +2,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.as_posix() + "/"
 
-#예시 양식 겸 기본값
+#예시 양식 겸 기본값 
 ENDPOINTS = {
     "Lipophilicity": {
         "type": "regression",
