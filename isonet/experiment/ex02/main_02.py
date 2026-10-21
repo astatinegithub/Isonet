@@ -157,7 +157,7 @@ if __name__ == "__main__":
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
     }
-    train_seed = 25
+    train_seed = 42
     experiment_name = f'PPBR_AZ_{train_seed}seed_re'
 
     BASE_CONFIG = {
