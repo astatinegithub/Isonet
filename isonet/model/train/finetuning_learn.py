@@ -11,6 +11,7 @@ from torch_geometric.loader import DataLoader
 from isonet.config import ROOT, ENDPOINTS, MODEL_A_CONFIG
 from isonet.model.fine_tuning_model import IsonetModel
 from isonet.data.dataset import split_dataset
+from isonet.model.utils.utils import save, train_val_loss_graph
 
 
 def make_dataloader(train_graphs, val_graphs, batch_size=64):
@@ -64,24 +65,6 @@ def train_one_epoch(model, train_loader, optimizer, device, criterion_r, criteri
     return train_total_loss
 
 
-def train_val_loss_graph(loss_history: dict[list], save_path=None, dpi=300, plt_close=False):
-    epochs = range(1, len(loss_history["train_loss"]) + 1)
-    plt.plot(epochs, loss_history['train_loss'], label="Train")
-    plt.plot(epochs, loss_history['val_loss'], label="Validation")
-
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.grid()
-    plt.tight_layout()
-    if save_path is not None:
-        plt.savefig(save_path, dpi=dpi)
-    if plt_close:
-        plt.close()
-    else:
-        plt.show()
-
-
 @torch.no_grad()
 def evaluate(model, val_loader, device, criterion_r, criterion_b, endpoints, target_idx=0) -> dict[int, dict]:
     model.eval()
@@ -125,7 +108,6 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
     assert list(model.heads.keys()) == list(endpoints),("모델 head와 endpoint 설정이 일치하지 않습니다.")
     loss_history = {"train_loss":[], "val_loss":[]} # loss 추적용
     if pretrain_path is not None:                       # 사전학습 있을 때 
-        
         checkpoint = torch.load(
             pretrain_path,
             map_location=device,
@@ -134,7 +116,7 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
         model.encoder.load_state_dict(checkpoint["encoder"])
         # loss_history = checkpoint["loss_history"]
     best_loss = float('inf')
-    # 불러오는거 아직 안만듦
+    # 학습
     for epoch in range(epochs):
         train_total_loss = train_one_epoch(model, train_loader, optimizer, device, criterion_r, criterion_b, endpoints)
         val_total_loss = evaluate(model, val_loader, device, criterion_r, criterion_b, endpoints)
@@ -147,46 +129,12 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
         print(f"Epoch {epoch+1} | train loss {train_loss} | valid_loss {val_loss}")
 
         if (epoch+1)%save_freq==0:
-            torch.save(
-                {
-                    "encoder": model.encoder.state_dict(),
-                    "heads": model.heads.state_dict(),
-                    "optimizer": optimizer.state_dict(),
-                    "model": model.state_dict(),
-                    "epoch": epoch,
-                    "loss_history": loss_history,
-                    "cfg": cfg
-                },
-                save_dir / f"finetune_train_epoch_{epoch + 1}.pt"
-            )
+            save(save_dir / f"finetune_train_epoch_{epoch + 1}.pt", model=model, optimizer=optimizer, epoch=epoch, loss_history=loss_history, cfg=cfg)
         if val_loss < best_loss:
             best_loss = float(val_loss)
-            torch.save(
-                {
-                    "encoder": model.encoder.state_dict(),
-                    "heads": model.heads.state_dict(),
-                    "optimizer": optimizer.state_dict(),
-                    "model": model.state_dict(),
-                    "epoch": epoch,
-                    "loss_history": loss_history,
-                    "cfg": cfg
-                },
-                save_dir / f"finetune_val_best.pt"
-            )
+            save(save_dir / f"finetune_val_best.pt", model=model, optimizer=optimizer, epoch=epoch, loss_history=loss_history, cfg=cfg)
         
-
-    torch.save(
-        {
-            "encoder": model.encoder.state_dict(),
-            "heads": model.heads.state_dict(),
-            "optimizer": optimizer.state_dict(),
-            "model": model.state_dict(),
-            "epoch": epoch,
-            "loss_history": loss_history,
-            "cfg": cfg
-        },
-        save_dir / f"finish_train_epoch_{epoch+1}.pt"
-    )
+    save(save_dir / f"finish_train_epoch_{epoch+1}.pt", model=model, optimizer=optimizer, epoch=epoch, loss_history=loss_history, cfg=cfg)
     train_val_loss_graph(loss_history, loss_image_path, plt_close=plt_close)
     return model, save_dir / f"finish_train_epoch_{epoch+1}.pt"
 
