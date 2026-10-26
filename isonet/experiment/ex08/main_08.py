@@ -104,7 +104,7 @@ def main(train_seed, experiment_name):
         endpoints=endpoints,
         epochs=100,
         save_freq=20,
-        # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share_retrain_mean_pool2/checkpoint1_1/ssl_checkpoint_119epoch.pt',
+        pretrain_path=ROOT + '/experiment/ex03/output/pretrain_for_share_no_cip3/checkpoint1_1/ssl_checkpoint_250epoch.pt',
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
         train_seed=train_seed,
