@@ -149,6 +149,7 @@ def make_pretrain_dataset(in_path, out_path):
         print('이미 데이터셋이 있음')
 
 if __name__ == "__main__":
+    """사전학습 유무 차이보는 실험"""
     pretrain_data = ROOT + "dataset/raw/smiles/Compound_000000001_000500000.sdf"
     processed_data = ROOT + "/dataset/processed_data/processed_smiles/" + pretrain_data.split('/')[-1][:-4]
     finetune_path = ROOT + "dataset/raw/admet/PPBR_AZ.csv"

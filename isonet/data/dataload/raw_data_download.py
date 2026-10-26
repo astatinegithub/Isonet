@@ -27,4 +27,4 @@ def load_sdf_data(filename):
 
 
 if __name__ == "__main__":
-    load_sdf_data('Compound_000500001_001000000.sdf.gz')
+    load_sdf_data('Compound_001000001_001500000.sdf.gz')

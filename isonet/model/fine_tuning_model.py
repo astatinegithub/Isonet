@@ -1,3 +1,4 @@
+from copy import copy 
 import torch
 from torch import nn
 from torch import Tensor
@@ -20,6 +21,8 @@ class IsonetModel(nn.Module):
             cfg["depth"]
         )
         self.use_stereo_attention = cfg.get("use_stereo_attention", False)
+        self.encoder_use_cip = cfg.get("encoder_use_cip", True)
+        self.cip_slice = slice(51, 56) # 이거 나중에 바꿔야할듯 -> 명시보다는 변수로 입력받아야함
         self.pool = cfg.get('pooling', global_add_pool) # 임시pooling 방식
         self.heads = nn.ModuleDict({
             admet : nn.Sequential(
@@ -40,10 +43,17 @@ class IsonetModel(nn.Module):
 
 
     def forward(self, data: MolGraph):
-        h, _ = self.encoder(data)
+        input_data = data
+        if not self.encoder_use_cip:
+            input_data = copy(data)
+            input_data.x = data.x.clone()
+            input_data[:, self.cip_slice] = 0
+
+        h, _ = self.encoder(input_data)
+
         if self.use_stereo_attention:
-            pass
             h, attention = self.stereo_attention(h, data)
+        
         h = self.pool(h, data.batch)
 
         return {name: head(h) for name, head in self.heads.items()}

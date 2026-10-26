@@ -105,7 +105,11 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
     criterion_r = nn.MSELoss()
     criterion_b = F.binary_cross_entropy_with_logits
 
-    assert list(model.heads.keys()) == list(endpoints),("모델 head와 endpoint 설정이 일치하지 않습니다.")
+    if cfg.get('encode_grad_off', False): # 파라미터 정리필요
+        for param in model.encoder.parameters():
+            param.requires_grad = False
+
+    assert list(model.heads.keys()) == list(endpoints), ("모델 head와 endpoint 설정이 일치하지 않습니다.")
     loss_history = {"train_loss":[], "val_loss":[]} # loss 추적용
     if pretrain_path is not None:                       # 사전학습 있을 때 
         checkpoint = torch.load(
@@ -114,8 +118,8 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
             weights_only=False
         )
         model.encoder.load_state_dict(checkpoint["encoder"])
-        # loss_history = checkpoint["loss_history"]
     best_loss = float('inf')
+
     # 학습
     for epoch in range(epochs):
         train_total_loss = train_one_epoch(model, train_loader, optimizer, device, criterion_r, criterion_b, endpoints)

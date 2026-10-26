@@ -13,7 +13,8 @@ from isonet.data.dataload.raw_data_download import load_sdf_data
 
 
 
-def run_experiment(cfg, pretrain_data, experiment_name, train_seed, split_seed, checkpoint_path=None):
+def run_experiment(cfg, pretrain_data, experiment_name, train_seed,
+                   split_seed, epochs, checkpoint_path=None):
     
     
     output_path1_1 = ROOT + f"dataset/processed_data/ex03_{experiment_name}/pretrain_data1.pt"
@@ -39,13 +40,14 @@ def run_experiment(cfg, pretrain_data, experiment_name, train_seed, split_seed, 
         loss_image_path=loss_image_path1_1,
         save_dir=save_dir1_1,
         checkpoint_path=checkpoint_path,
-        epochs=60,
+        epochs=epochs,
         plt_close=True,
         seed=train_seed
     )
 
 
 if __name__ == "__main__":
+    """사전학습 실험(?) -> 공용 사전학습 checkpoint 제작이 목표"""
     # pretrain_data = ROOT + "dataset/raw/smiles/Compound_000000001_000500000.sdf"
     # experiment_name = 'pretrain_share_retrain_mean_pool'
     BASE_CONFIG = {
@@ -57,23 +59,18 @@ if __name__ == "__main__":
             "pooling":global_mean_pool,
             "atom_types": AtomFeaturizer.default().atom_type_nums,
             "bond_types": BondFeaturizer.default().bond_type_nums,
+            "encoder_use_cip": False,      # DMPNN에 원자 CIP를 전달할지
+            # "use_stereo_attention": True,  # Attention을 사용할지
         }
-    # run_experiment(
-    #     BASE_CONFIG,
-    #     pretrain_data,
-    #     experiment_name,
-    #     train_seed=42,
-    #     split_seed=25, 
-    #     # checkpoint_path=ROOT+'/experiment/ex03/output/pretrain_share_retrain_mean_pool/checkpoint1_1/ssl_checkpoint_60epoch_finish.pt'
-    # )
-    experiment_name = 'pretrain_share_retrain_mean_pool2'
+    experiment_name = 'pretrain_for_share_no_cip3'
 
-    pretrain_data = ROOT + "dataset/raw/smiles/Compound_000500001_001000000.sdf"
+    pretrain_data = ROOT + "dataset/raw/smiles/Compound_001000001_001500000.sdf"
     run_experiment(
         BASE_CONFIG,
         pretrain_data,
         experiment_name,
         train_seed=42,
         split_seed=25, 
-        checkpoint_path=ROOT+'/experiment/ex03/output/pretrain_share_retrain_mean_pool/checkpoint1_1/ssl_checkpoint_60epoch.pt'
+        epochs=50,
+        checkpoint_path=ROOT+'/experiment/ex03/output/pretrain_for_share_no_cip2/checkpoint1_1/ssl_checkpoint_200epoch.pt'
     )

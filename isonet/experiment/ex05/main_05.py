@@ -120,6 +120,8 @@ def run_experiment(cfg1, cfg2, origin_raw_data, experiment_name,
 
 
 if __name__ == "__main__":
+    """stereo attention 비교 실험"""
+
     origin_raw_data = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
     endpoint_names = ["PPBR_AZ"]
     endpoints = endpoints = {

@@ -137,8 +137,6 @@ def makeMolGraph(reader, output_path, validator: MolValidator, use_stereo: bool,
 
 
 # import 용 
-
-
 def make_pretrain_data(input_path: str, output_path: str, use_stereo: bool=False, max_len=None):
     reader = SDFReader(input_path)
     validator = MolValidator(allowed_atoms)

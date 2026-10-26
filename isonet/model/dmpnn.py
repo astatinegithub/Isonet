@@ -1,3 +1,4 @@
+from copy import copy
 import torch
 from torch import nn
 from torch import Tensor
@@ -81,6 +82,7 @@ class FeedForward(nn.Module):
         nn.Dropout(drop_rate),
         nn.Linear(4*in_dim, in_dim),
         )
+        
 
     def forward(self, x):
         return self.layers(x)
@@ -96,7 +98,6 @@ class TaskHead(nn.Module):
             nn.Dropout(drop_rate),
             nn.Linear(hidden_dim, hidden_dim)
         )
-
 
 
     def forward(self, x):
@@ -118,9 +119,18 @@ class SSLModel(nn.Module):
         self.atom_head = nn.Linear(cfg["hidden_dim"], cfg["atom_types"])
         self.bond_head = nn.Linear(cfg["hidden_dim"], cfg["bond_types"])
 
+        self.encoder_use_cip = cfg.get("encoder_use_cip", True)
+        self.cip_slice = slice(51, 56) # 이거 나중에 바꿔야할듯 -> 명시보다는 변수로 입력받아야함
+
 
     def forward(self, data: MolGraph):
-        atom_h, bond_h = self.encoder(data)
+        input_data = data
+        if not self.encoder_use_cip:
+            input_data = copy(data)
+            input_data.x = data.x.clone()
+            input_data[:, self.cip_slice] = 0
+
+        atom_h, bond_h = self.encoder(input_data)
         atom_logits = self.atom_head(atom_h) 
         bond_logits = self.bond_head(bond_h) 
 
