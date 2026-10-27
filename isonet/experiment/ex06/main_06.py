@@ -131,7 +131,7 @@ def main(train_seed, experiment_name):
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
         train_seed=train_seed,
-        split_seed=25,
+        split_seed=20,
     )
 
 
@@ -139,8 +139,8 @@ if __name__ == "__main__":
     """cip언제 어디에 넣는지 비교 실험"""
 
     train_seed = 20
-    main(train_seed, f'PPBR_AZ_{train_seed}seed_cip_where')
+    main(train_seed, f'PPBR_AZ_{train_seed}seed_cip_where_split20')
     train_seed = 25
-    main(train_seed, f'PPBR_AZ_{train_seed}seed_cip_where')
+    main(train_seed, f'PPBR_AZ_{train_seed}seed_cip_where_split20')
     train_seed = 42
-    main(train_seed, f'PPBR_AZ_{train_seed}seed_cip_where')
+    main(train_seed, f'PPBR_AZ_{train_seed}seed_cip_where_split20')

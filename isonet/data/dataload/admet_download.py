@@ -60,7 +60,25 @@ for key, filename in {
             f"tdc_{key}.csv"
         ),
     }
-
+    
+DATASETS.update({
+    "expansionrx_train": {
+        "filename": "ExpansionRx_train.csv",
+        "url": (
+            "https://huggingface.co/datasets/"
+            "openadmet/openadmet-expansionrx-challenge-data/"
+            "resolve/main/expansion_data_train.csv"
+        ),
+    },
+    "expansionrx_test": {
+        "filename": "ExpansionRx_test.csv",
+        "url": (
+            "https://huggingface.co/datasets/"
+            "openadmet/openadmet-expansionrx-challenge-data/"
+            "resolve/main/expansion_data_test.csv"
+        ),
+    },
+})
 
 def download_dataset(name: str) -> Path:
     info = DATASETS[name]
