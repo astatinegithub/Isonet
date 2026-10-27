@@ -94,7 +94,7 @@ def main(train_seed, experiment_name):
             "atom_dim": 72,        # atom feature 차원
             "bond_dim": 14,        # bond feature 차원
             "hidden_dim": 512,
-            "admet_hidden_dim": 256,
+            "admet_hidden_dim": 128, # 변경
             "pooling": global_mean_pool,
             "num_endpoint": len(endpoints.keys()), 
             "depth": 5,
@@ -156,8 +156,8 @@ if __name__ == "__main__":
     """cip언제 어디에 넣는지 비교 실험"""
 
     train_seed = 20
-    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where')
+    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where_small')
     train_seed = 25
-    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where')
+    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where_small')
     train_seed = 42
-    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where')
+    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where_small')
