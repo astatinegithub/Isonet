@@ -18,7 +18,7 @@ __all__ = ["split_dataset","mol2feature", "MolGraph", "SSLDataset"]
 
 def split_dataset(path, split_ratio: list[int, int, int], test_path=None, seed=25):
     """split_ratio는 [train, valid, test]순으로 입력"""
-    if test_graphs == None:
+    if test_graphs is None:
         graphs = torch.load(path, weights_only=False)
         train_size = int(len(graphs) * split_ratio[0])
         val_size = int(len(graphs) * split_ratio[1])

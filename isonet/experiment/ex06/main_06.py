@@ -27,9 +27,10 @@ def run_experiment(cfgs:list, origin_raw_data, experiment_name,
     output_dir = ROOT + f"experiment/ex06/output/{experiment_name}/"
     test_path = ROOT + f"dataset/processed_data/ex06_{experiment_name}/finetuning_test_data.pt"
 
-    if (not origin_test_path == None) and (not os.path.exists(test_path)):
-        make_fine_tuning_data(origin_test_path, test_path, endpoints, smiles_col=smiles_col, use_stereo=True) 
+    if not (origin_test_path is None):
         test_path = ROOT + f"dataset/processed_data/ex06_{experiment_name}/finetuning_test_data.pt"
+        if (not os.path.exists(test_path)):
+            make_fine_tuning_data(origin_test_path, test_path, endpoints, smiles_col=smiles_col, use_stereo=True) 
     else:
         test_path = None
 
@@ -40,7 +41,11 @@ def run_experiment(cfgs:list, origin_raw_data, experiment_name,
         data_path_ = output_path_
         train_graphs_, val_graphs_, test_graphs_ = split_dataset(
             path=data_path_,
-            split_ratio=[0.8, 0.2],
+            split_ratio=(
+                [0.7, 0.2, 0.1]
+                if test_path is None
+                else [0.8, 0.2]
+            ),
             seed=split_seed,
             test_path=test_path
         )
@@ -71,8 +76,9 @@ def run_experiment(cfgs:list, origin_raw_data, experiment_name,
         )
 
 def main(train_seed, experiment_name):
-    origin_raw_data = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
-    endpoint_names = ["PPBR_AZ"]
+    origin_raw_data =  ROOT + "dataset/raw/admet/ExpansionRx_train.csv"
+    origin_test_path = ROOT + "dataset/raw/admet/ExpansionRx_test.csv"
+    endpoint_names = ["ExpansionRx_HLM"]
     endpoints = endpoints = {
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
@@ -140,9 +146,9 @@ def main(train_seed, experiment_name):
         pretrain_path=ROOT + '/experiment/ex03/output/pretrain_for_share_no_cip3/checkpoint1_1/ssl_checkpoint_250epoch.pt',
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
-        origin_test_path=ROOT + "dataset/raw/admet/PPBR_AZ.csv",
+        origin_test_path=origin_test_path,
         train_seed=train_seed,
-        split_seed=20,
+        split_seed=25,
     )
 
 
@@ -150,8 +156,8 @@ if __name__ == "__main__":
     """cip언제 어디에 넣는지 비교 실험"""
 
     train_seed = 20
-    main(train_seed, f'PPBR_AZ_{train_seed}seed_cip_where_split20')
+    main(train_seed, f'ExpansionRx_MLM_{train_seed}seed_cip_where')
     train_seed = 25
-    main(train_seed, f'PPBR_AZ_{train_seed}seed_cip_where_split20')
+    main(train_seed, f'ExpansionRx_MLM_{train_seed}seed_cip_where')
     train_seed = 42
-    main(train_seed, f'PPBR_AZ_{train_seed}seed_cip_where_split20')
+    main(train_seed, f'ExpansionRx_MLM_{train_seed}seed_cip_where')
