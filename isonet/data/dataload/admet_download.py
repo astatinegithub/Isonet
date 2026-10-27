@@ -60,7 +60,7 @@ for key, filename in {
             f"tdc_{key}.csv"
         ),
     }
-    
+
 DATASETS.update({
     "expansionrx_train": {
         "filename": "ExpansionRx_train.csv",
@@ -97,4 +97,3 @@ def download_dataset(name: str) -> Path:
 if __name__ == "__main__":
     for name in DATASETS:
         print(name, download_dataset(name))
-        origin_raw_data = download_dataset("ppbr_az")

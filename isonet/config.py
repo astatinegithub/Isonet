@@ -33,5 +33,19 @@ ALL_ENDPOINTS = {
         "target_column": "Y",
         "selection_metric": "mae",
         "smiles_col": "SMILES",
-    }
+    },
+    "ExpansionRx_HLM": {
+        "type": "regression",
+        "target_column": "HLM CLint",
+        "selection_metric": "rmse",
+        "smiles_col": "SMILES",
+        "target_transform": "log10p1",
+    },
+    "ExpansionRx_MLM": {
+        "type": "regression",
+        "target_column": "MLM CLint",
+        "selection_metric": "rmse",
+        "smiles_col": "SMILES",
+        "target_transform": "log10p1",
+    },
 }

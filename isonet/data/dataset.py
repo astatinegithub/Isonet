@@ -16,20 +16,34 @@ from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 __all__ = ["split_dataset","mol2feature", "MolGraph", "SSLDataset"]
 
 
-def split_dataset(path, split_ratio: list[int, int, int], seed=25):
+def split_dataset(path, split_ratio: list[int, int, int], test_path=None, seed=25):
     """split_ratio는 [train, valid, test]순으로 입력"""
-    graphs = torch.load(path, weights_only=False)
-    train_size = int(len(graphs) * split_ratio[0])
-    val_size = int(len(graphs) * split_ratio[1])
-    test_size = len(graphs) - (train_size+val_size)
+    if test_graphs == None:
+        graphs = torch.load(path, weights_only=False)
+        train_size = int(len(graphs) * split_ratio[0])
+        val_size = int(len(graphs) * split_ratio[1])
+        test_size = len(graphs) - (train_size+val_size)
 
-    train_graphs, val_graphs, test_graphs = random_split(
-        graphs,
-        [train_size, val_size, test_size],
-        generator=torch.Generator().manual_seed(seed)
-    )
+        train_graphs, val_graphs, test_graphs = random_split(
+            graphs,
+            [train_size, val_size, test_size],
+            generator=torch.Generator().manual_seed(seed)
+        )
 
-    return train_graphs, val_graphs, test_graphs
+        return train_graphs, val_graphs, test_graphs
+    else:
+        graphs = torch.load(path, weights_only=False)
+        train_size = int(len(graphs) * split_ratio[0])
+        val_size = len(graphs) - train_size
+
+        train_graphs, val_graphs = random_split(
+            graphs,
+            [train_size, val_size],
+            generator=torch.Generator().manual_seed(seed)
+        )
+        test_graphs = torch.load(test_path, weights_only=False)
+
+        return train_graphs, val_graphs, test_graphs
 
 
 def build_reverse_edge_index(edge_index: list) -> list:

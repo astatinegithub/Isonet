@@ -15,7 +15,8 @@ from isonet.eval.downstream_evaluation import evaluate_model
 
 def run_experiment(cfgs:list, origin_raw_data, experiment_name,
                    endpoints, smiles_col, epochs, save_freq=1,
-                   pretrain_path=None, train_seed=42, split_seed=42):
+                   pretrain_path=None, origin_test_path=None,
+                   train_seed=42, split_seed=42):
     """
     1. base 
     2. base + 인코더 CIP
@@ -23,7 +24,15 @@ def run_experiment(cfgs:list, origin_raw_data, experiment_name,
     4. 인코더 CIP+ Stereo Attention
     """
     Path(ROOT + f"dataset/processed_data/ex06_{experiment_name}").mkdir(parents=True, exist_ok=True)
-    output_dir = ROOT + f"experiment/ex06/output/{experiment_name}/" 
+    output_dir = ROOT + f"experiment/ex06/output/{experiment_name}/"
+    test_path = ROOT + f"dataset/processed_data/ex06_{experiment_name}/finetuning_test_data.pt"
+
+    if (not origin_test_path == None) and (not os.path.exists(test_path)):
+        make_fine_tuning_data(origin_test_path, test_path, endpoints, smiles_col=smiles_col, use_stereo=True) 
+        test_path = ROOT + f"dataset/processed_data/ex06_{experiment_name}/finetuning_test_data.pt"
+    else:
+        test_path = None
+
     for i, cfg in enumerate(cfgs):
         output_path_ = ROOT + f"dataset/processed_data/ex06_{experiment_name}/finetuning_data{i}.pt"
         if not(os.path.exists(output_path_)):
@@ -31,8 +40,9 @@ def run_experiment(cfgs:list, origin_raw_data, experiment_name,
         data_path_ = output_path_
         train_graphs_, val_graphs_, test_graphs_ = split_dataset(
             path=data_path_,
-            split_ratio=[0.7, 0.2, 0.1],
-            seed=split_seed
+            split_ratio=[0.8, 0.2],
+            seed=split_seed,
+            test_path=test_path
         )
         save_dir_ = ROOT + f"experiment/ex06/output/{experiment_name}/checkpoint{i}"
         Path(save_dir_).mkdir(parents=True, exist_ok=True)
@@ -130,6 +140,7 @@ def main(train_seed, experiment_name):
         pretrain_path=ROOT + '/experiment/ex03/output/pretrain_for_share_no_cip3/checkpoint1_1/ssl_checkpoint_250epoch.pt',
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
+        origin_test_path=ROOT + "dataset/raw/admet/PPBR_AZ.csv",
         train_seed=train_seed,
         split_seed=20,
     )

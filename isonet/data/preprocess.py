@@ -4,7 +4,9 @@ from pathlib import Path
 from tqdm import tqdm
 import torch
 import pandas as pd
+import numpy as np
 from pathlib import Path
+
 
 from isonet.config import ENDPOINTS
 from isonet.data.dataset import MolGraph, mol2feature
@@ -155,6 +157,9 @@ def make_fine_tuning_data(input_path: str, output_path: str, endpoints,
                           smiles_col, use_stereo: bool=False, max_len=None):
     df = pd.read_csv(input_path)
     target_columns = [info["target_column"] for info in endpoints.values()]
+
+    df = make_claer(df, smiles_col, target_columns, endpoints)
+
     reader = ADMETReader(
         df=df,
         smiles_col=smiles_col,
@@ -169,3 +174,37 @@ def make_fine_tuning_data(input_path: str, output_path: str, endpoints,
         use_stereo=use_stereo,
         max_len=max_len
     )
+
+
+def make_claer(df, smiles_col, target_columns, endpoints):
+    n_before = len(df)
+
+    # smiles없는행 제거
+    df = df.dropna(subset=[smiles_col]).copy()
+
+    # # 수치형인지 확인아니면 무한대 처리
+    # for col in target_columns:
+    #     df[col] = pd.to_numeric(df[col], errors="raise")
+    #     df[col] = df[col].replace([np.inf, -np.inf], np.nan)
+
+    # target만 가저와서 결측 제거
+    df = df.dropna(subset=target_columns, how="all").copy()
+
+    # hugging face 기반 변환 (log화 시키기)
+    for info in endpoints.values():
+        col = info["target_column"]
+        transform = info.get("target_transform", "none")
+
+        if transform == "log10p1":
+            # 청소율에서 음수가 발견되면 조용히 바꾸지 않고 확인
+            if (df[col].dropna() < 0).any():
+                raise ValueError(f"{col}: 음수 측정값을 확인하세요.")
+
+            df[col] = np.log10(1.0 + df[col])
+
+        elif transform != "none":
+            raise ValueError(f"지원하지 않는 변환: {transform}")
+
+    print(f"전처리: {n_before} → {len(df)}개")
+
+    return df
