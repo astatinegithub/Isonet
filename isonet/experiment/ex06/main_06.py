@@ -156,8 +156,8 @@ if __name__ == "__main__":
     """cip언제 어디에 넣는지 비교 실험"""
 
     train_seed = 20
-    main(train_seed, f'ExpansionRx_MLM_{train_seed}seed_cip_where')
+    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where')
     train_seed = 25
-    main(train_seed, f'ExpansionRx_MLM_{train_seed}seed_cip_where')
+    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where')
     train_seed = 42
-    main(train_seed, f'ExpansionRx_MLM_{train_seed}seed_cip_where')
+    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where')

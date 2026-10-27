@@ -188,7 +188,7 @@ def make_claer(df, smiles_col, target_columns, endpoints):
     #     df[col] = df[col].replace([np.inf, -np.inf], np.nan)
 
     # target만 가저와서 결측 제거
-    df = df.dropna(subset=target_columns, how="all").copy()
+    df = df.dropna(subset=target_columns, how="any").copy()
 
     # hugging face 기반 변환 (log화 시키기)
     for info in endpoints.values():
