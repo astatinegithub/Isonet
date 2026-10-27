@@ -47,7 +47,7 @@ class IsonetModel(nn.Module):
         if not self.encoder_use_cip:
             input_data = copy(data)
             input_data.x = data.x.clone()
-            input_data[:, self.cip_slice] = 0
+            input_data.x[:, self.cip_slice] = 0
 
         h, _ = self.encoder(input_data)
 

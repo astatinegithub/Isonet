@@ -124,7 +124,9 @@ def main(train_seed, experiment_name):
 if __name__ == "__main__":
     """encoder고정 실험"""
 
-    train_seed = 40
-    experiment_name = f'PPBR_AZ_{train_seed}seed_encoder_fix'
-
-    main(train_seed, experiment_name) # 사전학습 경로 재설정 필요
+    train_seed = 25
+    main(train_seed, f'PPBR_AZ_{train_seed}seed_encoder_fix')
+    train_seed = 20
+    main(train_seed, f'PPBR_AZ_{train_seed}seed_encoder_fix')
+    train_seed = 42
+    main(train_seed, f'PPBR_AZ_{train_seed}seed_encoder_fix')

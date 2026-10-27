@@ -128,7 +128,7 @@ class SSLModel(nn.Module):
         if not self.encoder_use_cip:
             input_data = copy(data)
             input_data.x = data.x.clone()
-            input_data[:, self.cip_slice] = 0
+            input_data.x[:, self.cip_slice] = 0
 
         atom_h, bond_h = self.encoder(input_data)
         atom_logits = self.atom_head(atom_h) 
