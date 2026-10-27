@@ -93,8 +93,8 @@ def main(train_seed, experiment_name):
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
             "bond_dim": 14,        # bond feature 차원
-            "hidden_dim": 512,
-            "admet_hidden_dim": 128, # 변경
+            "hidden_dim": 128,
+            "admet_hidden_dim": 64, # 변경
             "pooling": global_mean_pool,
             "num_endpoint": len(endpoints.keys()), 
             "depth": 5,
@@ -121,7 +121,7 @@ def main(train_seed, experiment_name):
     cfg3['encoder_use_cip'] = False
 
     cfg3['use_stereo_attention'] = True
-    cfg3['attn_dim'] = 64
+    cfg3['attn_dim'] = 32
     cfg3['attn_droprate'] = 0.2
 
 
@@ -130,7 +130,7 @@ def main(train_seed, experiment_name):
     cfg4['encoder_use_cip'] = True
 
     cfg4['use_stereo_attention'] = True
-    cfg4['attn_dim'] = 64
+    cfg4['attn_dim'] = 32
     cfg4['attn_droprate'] = 0.2
 
     cfgs = [cfg1, cfg2, cfg3, cfg4]
@@ -143,7 +143,7 @@ def main(train_seed, experiment_name):
         endpoints=endpoints,
         epochs=100,
         save_freq=20,
-        pretrain_path=ROOT + '/experiment/ex03/output/pretrain_for_share_no_cip3/checkpoint1_1/ssl_checkpoint_250epoch.pt',
+        # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_for_share_no_cip3/checkpoint1_1/ssl_checkpoint_250epoch.pt',
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
         origin_test_path=origin_test_path,
