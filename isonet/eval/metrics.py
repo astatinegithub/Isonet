@@ -28,9 +28,20 @@ def regression_metrics(y_true: Tensor, y_pred: Tensor) -> dict:
     }
 
 
-def binary_metrics():
-    ...
+def binary_metrics(y_true, logits):
+    mask = torch.isfinite(y_true)
+    y_true = y_true[mask]
+    logits = logits[mask]
 
+    if y_true.numel() == 0:
+        return {"n": 0, "accuracy": None}
+
+    correct = (logits >= 0) == (y_true == 1)
+
+    return {
+        "n": y_true.numel(),
+        "accuracy": correct.float().mean().item(),
+    }
 
 
 def compute_metrics(y_true: Tensor, y_pred: Tensor, endpoints: dict) -> dict:

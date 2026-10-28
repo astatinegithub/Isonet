@@ -48,4 +48,10 @@ ALL_ENDPOINTS = {
         "smiles_col": "SMILES",
         "target_transform": "log10p1",
     },
+    "CMRT_order": { # 사전학습용임 endpoint이 아님 
+        "type": "binary",
+        "target_column": "elution_order",
+        "smiles_col": "SMILES",
+        "target_transform": "map_0/1"
+    },
 }

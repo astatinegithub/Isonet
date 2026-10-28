@@ -114,8 +114,8 @@ def run_experiment(cfg1, cfg2, origin_raw_data, experiment_name,
         output_file_number=2
     )
 
-if __name__ == "__main__":
-    """pooling 실험"""
+
+def main(train_seed, experiment_name):
     origin_raw_data = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
     endpoint_names = ["PPBR_AZ"]
     endpoints = endpoints = {
@@ -132,20 +132,28 @@ if __name__ == "__main__":
             "drop_rate":0.3,
             "endpoints": endpoints
         }
+    # add model
     cfg1 = BASE_CONFIG.copy()
-    cfg2 = BASE_CONFIG.copy()
     cfg1['pooling'] = global_add_pool
+
+    # mean model
+    cfg2 = BASE_CONFIG.copy()
     cfg2['pooling'] = global_mean_pool
-    experiment_name = 'pooling_test40'
+
+    
     run_experiment(
         cfg1,
         cfg2,
         origin_raw_data,
-        experiment_name,
+        experiment_name+f'_{train_seed}seed',
         endpoints,
         epochs=100,
         pretrain_path=None,#ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
-        train_seed=40,
+        train_seed=train_seed,
         split_seed=25
     )
+
+if __name__ == "__main__":
+    """pooling 실험"""
+    main(40, 'pooling_test')

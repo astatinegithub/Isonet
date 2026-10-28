@@ -116,8 +116,7 @@ def run_experiment(cfg, origin_raw_data, experiment_name,
     )
 
 
-if __name__ == "__main__":
-    """stereo feature 넣고 안넣고 차이보는 실험"""
+def main(train_seed, experiment_name):
     origin_raw_data = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
     endpoint_names = ["PPBR_AZ"]
     endpoints = endpoints = {
@@ -135,17 +134,21 @@ if __name__ == "__main__":
             "drop_rate":0.3,
             "endpoints": endpoints
         }
-    experiment_name = 'PPBR_AZ_25seed_no_pretrain'
+    
     run_experiment(
         cfg=BASE_CONFIG,
         origin_raw_data=origin_raw_data,
-        experiment_name=experiment_name,
+        experiment_name=experiment_name+f'_{train_seed}seed',
         endpoints=endpoints,
         epochs=100,
         save_freq=10,
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share_retrain_mean_pool2/checkpoint1_1/ssl_checkpoint_119epoch.pt',
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
-        train_seed=25,
+        train_seed=train_seed,
         split_seed=25
     )
+
+if __name__ == "__main__":
+    """stereo feature 넣고 안넣고 차이보는 실험"""
+    main(25, 'PPBR_AZ_no_pretrain') # PPBR_AZ_no_pretrain_25seed가 실험이름

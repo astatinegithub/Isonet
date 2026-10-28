@@ -93,8 +93,8 @@ def main(train_seed, experiment_name):
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
             "bond_dim": 14,        # bond feature 차원
-            "hidden_dim": 128,
-            "admet_hidden_dim": 64, # 변경
+            "hidden_dim": 512,
+            "admet_hidden_dim": 128, # 변경
             "pooling": global_mean_pool,
             "num_endpoint": len(endpoints.keys()), 
             "depth": 5,
@@ -161,3 +161,5 @@ if __name__ == "__main__":
     main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where_small')
     train_seed = 42
     main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where_small')
+
+    # 코드 수정 필요

@@ -3,8 +3,6 @@ from urllib.request import urlretrieve
 
 from isonet.config import ROOT
 
-
-
 # Biogen은 특정 커밋으로 고정
 BIOGEN_COMMIT = "b00df003de117ce9e5b381afd886095c5f2af2d5"
 
@@ -45,23 +43,6 @@ DATASETS = {
         "datasets/Lipophilicity.csv"
         ),
     },
-}
-# 중복되는건 이렇게 추가
-for key, filename in {
-    "ppbr_az": "PPBR_AZ.csv",
-    "clearance_microsome_az": "Clearance_Microsome_AZ.csv",
-    "cyp3a4_veith": "CYP3A4_Veith.csv",
-}.items():
-    DATASETS[key] = {
-        "filename": filename,
-        "url": (
-            f"https://huggingface.co/datasets/"
-            f"scikit-fingerprints/TDC_{key}/resolve/main/"
-            f"tdc_{key}.csv"
-        ),
-    }
-
-DATASETS.update({
     "expansionrx_train": {
         "filename": "ExpansionRx_train.csv",
         "url": (
@@ -78,7 +59,33 @@ DATASETS.update({
             "resolve/main/expansion_data_test.csv"
         ),
     },
-})
+    "cmrt_adh": {
+        "filename": "CMRT_ADH.csv",
+        "url": (
+            "https://raw.githubusercontent.com/"
+            "jairesdesousa/chiraldlsv/"
+            "5c05ccf33f9b5b0a3011214bba0fc2e84bf187dd/"
+            "RF_models/class_all.csv"
+        ),
+    },
+}
+
+
+# 중복되는건 이렇게 추가
+for key, filename in {
+    "ppbr_az": "PPBR_AZ.csv",
+    "clearance_microsome_az": "Clearance_Microsome_AZ.csv",
+    "cyp3a4_veith": "CYP3A4_Veith.csv",
+}.items():
+    DATASETS[key] = {
+        "filename": filename,
+        "url": (
+            f"https://huggingface.co/datasets/"
+            f"scikit-fingerprints/TDC_{key}/resolve/main/"
+            f"tdc_{key}.csv"
+        ),
+    }
+
 
 def download_dataset(name: str) -> Path:
     info = DATASETS[name]
@@ -96,4 +103,4 @@ def download_dataset(name: str) -> Path:
 
 if __name__ == "__main__":
     for name in DATASETS:
-        print(name, download_dataset(name))
+        print(name, download_dataset(name)) # 리스트 전부 다운

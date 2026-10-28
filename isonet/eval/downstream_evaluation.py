@@ -90,6 +90,7 @@ def evaluate_model(eval_model: str|IsonetModel, test_graphs, output_dir, output_
     # 추후 분석을 위한 정답·예측 저장
     torch.save(
         {
+            "cfg": cfg,
             "endpoints": list(endpoints),
             "y_true": y_true,
             "y_pred": y_pred,

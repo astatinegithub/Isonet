@@ -119,19 +119,13 @@ def run_experiment(cfg1, cfg2, origin_raw_data, experiment_name,
     )
 
 
-if __name__ == "__main__":
-    """stereo attention 비교 실험"""
-
+def main(train_seed, experiment_name):
     origin_raw_data = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
     endpoint_names = ["PPBR_AZ"]
     endpoints = endpoints = {
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
-    }
-
-    # 저장 dir 이름 변경
-    train_seed = 40
-    experiment_name = f'PPBR_AZ_{train_seed}seed_attn_test_lr1e4_mean'
+    }   
     
 
     BASE_CONFIG = {
@@ -160,7 +154,7 @@ if __name__ == "__main__":
         cfg1=cfg1,
         cfg2=cfg2,
         origin_raw_data=origin_raw_data,
-        experiment_name=experiment_name,
+        experiment_name=experiment_name+f'_{train_seed}seed',
         endpoints=endpoints,
         epochs=100,
         save_freq=10,
@@ -170,3 +164,7 @@ if __name__ == "__main__":
         train_seed=train_seed,
         split_seed=25,
     )
+
+if __name__ == "__main__":
+    """stereo attention 비교 실험"""
+    main(40, 'PPBR_AZ_attn_test_lr1e4_mean')

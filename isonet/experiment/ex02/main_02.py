@@ -148,8 +148,8 @@ def make_pretrain_dataset(in_path, out_path):
     else:
         print('이미 데이터셋이 있음')
 
-if __name__ == "__main__":
-    """사전학습 유무 차이보는 실험"""
+
+def main(train_seed, experiment_name):
     pretrain_data = ROOT + "dataset/raw/smiles/Compound_000000001_000500000.sdf"
     processed_data = ROOT + "/dataset/processed_data/processed_smiles/" + pretrain_data.split('/')[-1][:-4]
     finetune_path = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
@@ -158,8 +158,7 @@ if __name__ == "__main__":
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
     }
-    train_seed = 42
-    experiment_name = f'PPBR_AZ_{train_seed}seed_re'
+    
 
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
@@ -181,10 +180,17 @@ if __name__ == "__main__":
         BASE_CONFIG,
         processed_data,
         finetune_path, 
-        experiment_name, 
-        endpoints, 
+        experiment_name=experiment_name+f'_{train_seed}seed', 
+        endpoints=endpoints, 
         fine_epochs=100,
         smiles_col=endpoints[endpoint_names[0]]['smiles_col'],
         train_seed=train_seed,
         split_seed=25,
     )
+
+if __name__ == "__main__":
+    """사전학습 유무 차이보는 실험"""
+    train_seed = 42
+    experiment_name = f'PPBR_AZ_{train_seed}seed_re'
+
+    main(42, 'PPBR_AZ_re')

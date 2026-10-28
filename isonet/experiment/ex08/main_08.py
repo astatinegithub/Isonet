@@ -26,6 +26,7 @@ def run_experiment(cfgs:list, origin_raw_data, experiment_name,
         output_path_ = ROOT + f"dataset/processed_data/ex08_{experiment_name}/finetuning_data{i}.pt"
         if not(os.path.exists(output_path_)):
             make_fine_tuning_data(origin_raw_data, output_path_, endpoints, smiles_col=smiles_col, use_stereo=True)
+            
         data_path_ = output_path_
         train_graphs_, val_graphs_, test_graphs_ = split_dataset(
             path=data_path_,
@@ -113,7 +114,7 @@ def main(train_seed, experiment_name):
 
 
 if __name__ == "__main__":
-    """encoder고정 실험"""
+    """2차 사전학습 유용성 확인 실험"""
 
     train_seed = 40
     experiment_name = f'PPBR_AZ_{train_seed}seed_encoder_fix'

@@ -117,7 +117,13 @@ def model_finetuning(cfg, train_graphs, val_graphs, loss_image_path, save_dir, p
             map_location=device,
             weights_only=False
         )
-        model.encoder.load_state_dict(checkpoint["encoder"])
+        components = cfg.get('pretrain_component', "encoder")
+        for component in components: # 사전학습 불러올때 원하는거 불러오기
+            try:
+                model.encoder.load_state_dict(checkpoint[component])
+            except KeyError as e:
+                raise KeyError(f"pretrain_component missmatch! checkpoint has {checkpoint.keys()}\nerror message:{e}")
+            
     best_loss = float('inf')
 
     # 학습

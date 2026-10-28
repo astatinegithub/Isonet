@@ -202,6 +202,9 @@ def make_claer(df, smiles_col, target_columns, endpoints):
 
             df[col] = np.log10(1.0 + df[col])
 
+        elif transform == "map_0/1":
+            df[col] = df["F-L_class"].map({"F": 0, "L": 1})
+
         elif transform != "none":
             raise ValueError(f"지원하지 않는 변환: {transform}")
 

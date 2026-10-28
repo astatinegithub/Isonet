@@ -104,7 +104,7 @@ class StereoAttention(nn.Module):
 
         반환:
             updated_h: 원자별 보완 표현
-            attention: 선택된 방향성 결합과 가중치
+            attention: 선택된 방향성 결합과 가중치 -> 시각화용
         """
         cip = data.x[:, self.cip_start:self.cip_start + 4].to(dtype=h.dtype)
 

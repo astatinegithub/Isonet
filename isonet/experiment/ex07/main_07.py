@@ -111,7 +111,7 @@ def main(train_seed, experiment_name):
         origin_raw_data=origin_raw_data,
         experiment_name=experiment_name,
         endpoints=endpoints,
-        epochs=100,
+        epochs=250,
         save_freq=20,
         pretrain_path=ROOT + '/experiment/ex03/output/pretrain_for_share_no_cip3/checkpoint1_1/ssl_checkpoint_250epoch.pt',
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
