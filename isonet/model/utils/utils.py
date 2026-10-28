@@ -11,7 +11,7 @@ def save(output_name, is_finetune=True, **kwarg):
         torch.save(
             {
                 "encoder": kwarg['model'].encoder.state_dict(),
-                "stereo_attention": kwarg['model'].stereo_attention.state_dict(),
+                "stereo_attention": kwarg["model"].stereo_attention.state_dict() if hasattr(kwarg["model"], "stereo_attention") else None,
                 "heads": kwarg['model'].heads.state_dict(),
                 "optimizer": kwarg['optimizer'].state_dict(),
                 "model": kwarg['model'].state_dict(),

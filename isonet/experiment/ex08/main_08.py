@@ -17,7 +17,7 @@ from isonet.eval.downstream_evaluation import evaluate_model
 
 def run_experiment(pre_cfg, cfgs:list, origin_raw_data, experiment_name,
                    endpoints, smiles_col, epochs, pre_epochs,
-                   nomal_pretrain_data, save_freq=1, pretrain_path=None,
+                   origin_pretrain_data, save_freq=1, pretrain_path=None,
                    train_seed=42, split_seed=42):
     """
     1. 2차 stereo 학습 + stereo attention
@@ -28,8 +28,13 @@ def run_experiment(pre_cfg, cfgs:list, origin_raw_data, experiment_name,
     output_path2 = ROOT + f"dataset/processed_data/ex08_{experiment_name}/pretrain_data.pt"
     Path(ROOT + f"dataset/processed_data/ex08_{experiment_name}").mkdir(parents=True, exist_ok=True)
 
+    origin_raw_data_ = ROOT + "dataset/raw/admet/CMRT_ADH.csv"
+    endpoints_ = {"CMRT_order": deepcopy(ALL_ENDPOINTS["CMRT_order"])}
+
+
+
     if not(os.path.exists(output_path1)):
-        make_fine_tuning_data(origin_raw_data, output_path1, endpoints, smiles_col=smiles_col, use_stereo=True)
+        make_fine_tuning_data(origin_raw_data_, output_path1, endpoints_, smiles_col=smiles_col, use_stereo=True)
 
     data_path1 = output_path1
     data_path2 = output_path2
@@ -43,7 +48,7 @@ def run_experiment(pre_cfg, cfgs:list, origin_raw_data, experiment_name,
     train_len = len(train_graphs1)+len(val_graphs1)+len(test_graphs1)
 
     if not(os.path.exists(output_path2)):
-        make_pretrain_data(nomal_pretrain_data, output_path2, use_stereo=True, max_len=train_len)
+        make_pretrain_data(origin_pretrain_data, output_path2, use_stereo=True, max_len=train_len)
 
     train_graphs2, val_graphs2, test_graphs2 = split_dataset(
         path=data_path2,
@@ -99,8 +104,8 @@ def run_experiment(pre_cfg, cfgs:list, origin_raw_data, experiment_name,
     )
 
     pretrain_paths = {
-        "nomal_pretrain": last_model_path1,
-        "isomer_pretrain":pretrain_last_model_path,
+        "nomal_pretrain": pretrain_last_model_path,
+        "isomer_pretrain": last_model_path1,
         "base_pretrain": pretrain_path
     }
     
@@ -144,6 +149,7 @@ def run_experiment(pre_cfg, cfgs:list, origin_raw_data, experiment_name,
 
 def main(train_seed, experiment_name):
     origin_raw_data = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
+    origin_pretrain_data = ROOT + "dataset/raw/smiles/Compound_000000001_000500000_parts/part_003.sdf"
     endpoint_names = ["PPBR_AZ"]
     endpoints = endpoints = {
         name: deepcopy(ALL_ENDPOINTS[name])
@@ -164,12 +170,15 @@ def main(train_seed, experiment_name):
             "encode_grad_off": False,
             "encoder_use_cip": True,
             "use_stereo_attention": True,
+            "atom_types": AtomFeaturizer.default().atom_type_nums,
+            "bond_types": BondFeaturizer.default().bond_type_nums,
+            "attn_dim": 64,
+            "attn_droprate": 0.2
         }
     cfg0 = BASE_CONFIG.copy()
 
     # 추가학습 (isomer)
     cfg1 = BASE_CONFIG.copy()
-    cfg1['encoder_use_cip'] = False
     cfg1['pretrain_key'] = 'isomer_pretrain'
     cfg1['pretrain_component'] = ['encoder', 'stereo_attention']
 
@@ -177,8 +186,6 @@ def main(train_seed, experiment_name):
     cfg2= BASE_CONFIG.copy()
     cfg2['pretrain_key'] = 'nomal_pretrain'
     cfg2["pretrain_component"] = ["encoder"]
-    cfg2['atom_types'] = AtomFeaturizer.default().atom_type_nums
-    cfg2['bond_types'] = BondFeaturizer.default().bond_type_nums
     
     # 기본 (추가학습 x)
     cfg3= BASE_CONFIG.copy()
@@ -196,7 +203,7 @@ def main(train_seed, experiment_name):
         experiment_name=experiment_name+f'_{train_seed}seed',
         endpoints=endpoints,
         epochs=100,
-        per_epoch=0,
+        per_epoch=20,
         save_freq=20,
         pretrain_path=ROOT + '/experiment/ex03/output/pretrain_for_share_no_cip3/checkpoint1_1/ssl_checkpoint_250epoch.pt',
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
