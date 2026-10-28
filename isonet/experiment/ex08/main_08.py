@@ -15,7 +15,7 @@ from isonet.eval.downstream_evaluation import evaluate_model
 
 
 
-def run_experiment(pre_cfg, cfgs:list, origin_raw_data, experiment_name,
+def run_experiment(cfg_1, cfg_2, cfgs:list, origin_raw_data, experiment_name,
                    endpoints, smiles_col, epochs, pre_epochs,
                    origin_pretrain_data, save_freq=1, pretrain_path=None,
                    train_seed=42, split_seed=42):
@@ -29,12 +29,12 @@ def run_experiment(pre_cfg, cfgs:list, origin_raw_data, experiment_name,
     Path(ROOT + f"dataset/processed_data/ex08_{experiment_name}").mkdir(parents=True, exist_ok=True)
 
     origin_raw_data_ = ROOT + "dataset/raw/admet/CMRT_ADH.csv"
-    endpoints_ = {"CMRT_order": deepcopy(ALL_ENDPOINTS["CMRT_order"])}
+    
 
 
 
     if not(os.path.exists(output_path1)):
-        make_fine_tuning_data(origin_raw_data_, output_path1, endpoints_, smiles_col=smiles_col, use_stereo=True)
+        make_fine_tuning_data(origin_raw_data_, output_path1, cfg_1['endpoints'], smiles_col=smiles_col, use_stereo=True)
 
     data_path1 = output_path1
     data_path2 = output_path2
@@ -67,20 +67,20 @@ def run_experiment(pre_cfg, cfgs:list, origin_raw_data, experiment_name,
     loss_image_path2 = ROOT + f"experiment/ex08/output/{experiment_name}/loss_curve1.png"
 
     model1, last_model_path1 = model_finetuning(
-        cfg=pre_cfg,
+        cfg=cfg_1,
         train_graphs=train_graphs1,
         val_graphs=val_graphs1,
         loss_image_path=loss_image_path1,
         save_dir=save_dir1,
         pretrain_path=pretrain_path,
         epochs=epochs,
-        endpoints=endpoints,
+        endpoints=cfg_1['endpoints'],
         plt_close=True,
         seed=train_seed,
         save_freq=save_freq
     )
     pretrain_last_model_path = model_pretraining(
-        cfg=pre_cfg,
+        cfg=cfg_2,
         train_graphs=train_graphs2,
         val_graphs=val_graphs2,
         loss_image_path=loss_image_path2,
@@ -105,7 +105,7 @@ def run_experiment(pre_cfg, cfgs:list, origin_raw_data, experiment_name,
 
     pretrain_paths = {
         "nomal_pretrain": pretrain_last_model_path,
-        "isomer_pretrain": last_model_path1,
+        "isomer_pretrain": checkpoint1,
         "base_pretrain": pretrain_path
     }
     
@@ -175,7 +175,13 @@ def main(train_seed, experiment_name):
             "attn_dim": 64,
             "attn_droprate": 0.2
         }
-    cfg0 = BASE_CONFIG.copy()
+    # 추가학습 (isomer)의 pretrain cfg
+    cfg_1 = BASE_CONFIG.copy()
+    cfg_1['endpoint'] = {"CMRT_order": deepcopy(ALL_ENDPOINTS["CMRT_order"])}
+    cfg_1['num_endpoint'] = len(cfg_1['endpoint'].keys())
+
+    # 추가학습 (일반)의 pretrain cfg
+    cfg_2 = BASE_CONFIG.copy()
 
     # 추가학습 (isomer)
     cfg1 = BASE_CONFIG.copy()
@@ -197,13 +203,15 @@ def main(train_seed, experiment_name):
 
 
     run_experiment(
-        pre_cfg=cfg0,
+        cfg_1=cfg_1,
+        cfg_2=cfg_2,
         cfgs=cfgs,
         origin_raw_data=origin_raw_data,
         experiment_name=experiment_name+f'_{train_seed}seed',
         endpoints=endpoints,
         epochs=100,
-        per_epoch=20,
+        pre_epochs=100,
+        origin_pretrain_data=origin_pretrain_data,
         save_freq=20,
         pretrain_path=ROOT + '/experiment/ex03/output/pretrain_for_share_no_cip3/checkpoint1_1/ssl_checkpoint_250epoch.pt',
         # pretrain_path=ROOT + '/experiment/ex03/output/pretrain_share2/checkpoint1_1/ssl_checkpoint_80epoch.pt',
