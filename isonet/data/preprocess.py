@@ -176,7 +176,7 @@ def make_fine_tuning_data(input_path: str, output_path: str, endpoints,
     )
 
 
-def make_claer(df, smiles_col, target_columns, endpoints):
+def make_claer(df:pd.DataFrame, smiles_col, target_columns, endpoints):
     n_before = len(df)
 
     # smiles없는행 제거
@@ -186,9 +186,6 @@ def make_claer(df, smiles_col, target_columns, endpoints):
     # for col in target_columns:
     #     df[col] = pd.to_numeric(df[col], errors="raise")
     #     df[col] = df[col].replace([np.inf, -np.inf], np.nan)
-
-    # target만 가저와서 결측 제거
-    df = df.dropna(subset=target_columns, how="any").copy()
 
     # hugging face 기반 변환 (log화 시키기)
     for info in endpoints.values():
@@ -207,6 +204,8 @@ def make_claer(df, smiles_col, target_columns, endpoints):
 
         elif transform != "none":
             raise ValueError(f"지원하지 않는 변환: {transform}")
+        
+    df = df.dropna(subset=target_columns, how="any").copy()
 
     print(f"전처리: {n_before} → {len(df)}개")
 

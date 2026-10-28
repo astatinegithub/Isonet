@@ -26,7 +26,7 @@ def run_experiment(cfgs:list, origin_raw_data, experiment_name,
         output_path_ = ROOT + f"dataset/processed_data/ex08_{experiment_name}/finetuning_data{i}.pt"
         if not(os.path.exists(output_path_)):
             make_fine_tuning_data(origin_raw_data, output_path_, endpoints, smiles_col=smiles_col, use_stereo=True)
-            
+
         data_path_ = output_path_
         train_graphs_, val_graphs_, test_graphs_ = split_dataset(
             path=data_path_,
@@ -68,11 +68,6 @@ def main(train_seed, experiment_name):
         for name in endpoint_names
     }
 
-    # 저장 dir 이름 변경
-    # train_seed = 40
-    # experiment_name = f'PPBR_AZ_{train_seed}seed_attn_test_lr1e4_mean'
-    
-
     # 공통설정
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
@@ -91,6 +86,8 @@ def main(train_seed, experiment_name):
     cfg1['encode_grad_off'] = True
     cfg1['encoder_use_cip'] = False
 
+    cfg1['pretrain_component'] = ['encoder', 'stereo_attention']
+
     cfg1['use_stereo_attention'] = False
     # one more
 
@@ -101,7 +98,7 @@ def main(train_seed, experiment_name):
     run_experiment(
         cfgs=cfgs,
         origin_raw_data=origin_raw_data,
-        experiment_name=experiment_name,
+        experiment_name=experiment_name+f'_{train_seed}seed',
         endpoints=endpoints,
         epochs=100,
         save_freq=20,
@@ -116,7 +113,4 @@ def main(train_seed, experiment_name):
 if __name__ == "__main__":
     """2차 사전학습 유용성 확인 실험"""
 
-    train_seed = 40
-    experiment_name = f'PPBR_AZ_{train_seed}seed_encoder_fix'
-
-    main(train_seed, experiment_name) # 사전학습 경로 재설정 필요
+    main(40, 'PPBR_AZ_2nd_pretrain_test')

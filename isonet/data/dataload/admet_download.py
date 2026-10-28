@@ -89,10 +89,8 @@ for key, filename in {
 
 def download_dataset(name: str) -> Path:
     info = DATASETS[name]
-
     save_dir = Path(ROOT) / "dataset/raw/admet"
     save_dir.mkdir(parents=True, exist_ok=True)
-
     path = save_dir / info["filename"]
 
     if not path.is_file():

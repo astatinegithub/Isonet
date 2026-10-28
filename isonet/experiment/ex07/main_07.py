@@ -109,7 +109,7 @@ def main(train_seed, experiment_name):
     run_experiment(
         cfgs=cfgs,
         origin_raw_data=origin_raw_data,
-        experiment_name=experiment_name,
+        experiment_name=experiment_name+f"_{train_seed}seed",
         endpoints=endpoints,
         epochs=250,
         save_freq=20,
@@ -124,9 +124,6 @@ def main(train_seed, experiment_name):
 if __name__ == "__main__":
     """encoder고정 실험"""
 
-    train_seed = 25
-    main(train_seed, f'PPBR_AZ_{train_seed}seed_encoder_fix')
-    train_seed = 20
-    main(train_seed, f'PPBR_AZ_{train_seed}seed_encoder_fix')
-    train_seed = 42
-    main(train_seed, f'PPBR_AZ_{train_seed}seed_encoder_fix')
+    main(25, 'PPBR_AZ_encoder_fix')
+    main(20, 'PPBR_AZ_encoder_fix')
+    main(42, 'PPBR_AZ_encoder_fix')

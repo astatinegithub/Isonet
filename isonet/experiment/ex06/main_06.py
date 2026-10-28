@@ -139,7 +139,7 @@ def main(train_seed, experiment_name):
     run_experiment(
         cfgs=cfgs,
         origin_raw_data=origin_raw_data,
-        experiment_name=experiment_name,
+        experiment_name=experiment_name+f'_{train_seed}seed',
         endpoints=endpoints,
         epochs=100,
         save_freq=20,
@@ -155,11 +155,8 @@ def main(train_seed, experiment_name):
 if __name__ == "__main__":
     """cip언제 어디에 넣는지 비교 실험"""
 
-    train_seed = 20
-    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where_small')
-    train_seed = 25
-    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where_small')
-    train_seed = 42
-    main(train_seed, f'ExpansionRx_HLM_{train_seed}seed_cip_where_small')
+    main(20, 'ExpansionRx_HLM_cip_where')
+    main(25, 'ExpansionRx_HLM_cip_where')
+    main(42, 'ExpansionRx_HLM_cip_where')
 
     # 코드 수정 필요
