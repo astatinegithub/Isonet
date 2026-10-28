@@ -177,8 +177,8 @@ def main(train_seed, experiment_name):
         }
     # 추가학습 (isomer)의 pretrain cfg
     cfg_1 = BASE_CONFIG.copy()
-    cfg_1['endpoint'] = {"CMRT_order": deepcopy(ALL_ENDPOINTS["CMRT_order"])}
-    cfg_1['num_endpoint'] = len(cfg_1['endpoint'].keys())
+    cfg_1['endpoints'] = {"CMRT_order": deepcopy(ALL_ENDPOINTS["CMRT_order"])}
+    cfg_1['num_endpoint'] = len(cfg_1['endpoints'].keys())
 
     # 추가학습 (일반)의 pretrain cfg
     cfg_2 = BASE_CONFIG.copy()
@@ -224,4 +224,6 @@ def main(train_seed, experiment_name):
 if __name__ == "__main__":
     """2차 사전학습 유용성 확인 실험"""
 
-    main(40, 'PPBR_AZ_2nd_pretrain_test')
+    # main(25, 'PPBR_AZ_2nd_pretrain_test')
+    main(20, 'PPBR_AZ_2nd_pretrain_test')
+    main(42, 'PPBR_AZ_2nd_pretrain_test')
