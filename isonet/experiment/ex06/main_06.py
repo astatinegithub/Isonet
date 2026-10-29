@@ -102,7 +102,9 @@ def main(train_seed, experiment_name):
             "drop_rate":0.3,
             "endpoints": endpoints,
         }
-    
+    BASE_CONFIG['admet_hidden_dim'] = 64
+    BASE_CONFIG['hidden_dim'] = 128
+
     # 1. base 
     cfg1 = BASE_CONFIG.copy()
     cfg1['encoder_use_cip'] = False
@@ -156,7 +158,7 @@ def main(train_seed, experiment_name):
 if __name__ == "__main__":
     """cip언제 어디에 넣는지 비교 실험"""
 
-    experiment_name = "ExpansionRx_HLM_cip_where_add_pretrian"
+    experiment_name = "ExpansionRx_HLM_cip_where_small_pretrianed"
 
     main(20, experiment_name)
     main(25, experiment_name)
