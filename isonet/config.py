@@ -55,3 +55,13 @@ ALL_ENDPOINTS = {
         "target_transform": "map_0/1"
     },
 }
+
+DATAPATHS = {
+    "PPBR_AZ": {
+        "train" : ROOT + "dataset/raw/admet/PPBR_AZ.csv",
+    },
+    "ExpansionRx_HLM": {
+        "train": ROOT + "dataset/raw/admet/ExpansionRx_train.csv",
+        "test":  ROOT + "dataset/raw/admet/ExpansionRx_test.csv",
+    }
+}

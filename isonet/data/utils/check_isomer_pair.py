@@ -80,7 +80,7 @@ if __name__ == "__main__":
     #     data_type="pre",
     # )
     isomer_test(
-        input_path=ROOT + "dataset/raw/admet/ExpansionRx_train.csv",
+        input_path=ROOT + "dataset/raw/admet/CMRT_ADH.csv",
         data_type="fine",
         smiles_col="SMILES",
     )

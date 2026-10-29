@@ -4,7 +4,7 @@ from pathlib import Path
 from copy import deepcopy
 from torch_geometric.nn import global_mean_pool
 
-from isonet.config import ROOT, ALL_ENDPOINTS
+from isonet.config import ROOT, ALL_ENDPOINTS, DATAPATHS
 from isonet.data.dataset import split_dataset 
 from isonet.data.preprocess import make_fine_tuning_data, make_pretrain_data
 from isonet.model.train.finetuning_learn import model_finetuning
@@ -15,9 +15,10 @@ from isonet.data.featurizer import AtomFeaturizer, BondFeaturizer
 
 
 
-def run_experiment(cfg, processed_data, finetune_data, experiment_name,
-                   endpoints, train_seed, split_seed, pre_epochs=30,
-                   fine_epochs=50, smiles_col='smiles', pretrained_checkpoint=None):
+def run_experiment(cfg, processed_data, finetune_train_path, experiment_name,
+                   endpoints, train_seed, split_seed, finetune_test_path=None,
+                   pre_epochs=30, fine_epochs=50, smiles_col='smiles',
+                   pretrained_checkpoint=None):
 
     # output_path1_1 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/pretrain_data1.pt"
     output_path1_2 = ROOT + f"dataset/processed_data/ex02_{experiment_name}/finetuning_data1.pt"
@@ -25,27 +26,29 @@ def run_experiment(cfg, processed_data, finetune_data, experiment_name,
     Path(ROOT + f"dataset/processed_data/ex02_{experiment_name}").mkdir(parents=True, exist_ok=True)
 
     if not(os.path.exists(output_path1_2) & os.path.exists(output_path2)):
-        make_fine_tuning_data(finetune_data, output_path1_2, endpoints, smiles_col=smiles_col, use_stereo=True)
-        make_fine_tuning_data(finetune_data, output_path2, endpoints, smiles_col=smiles_col, use_stereo=True)
+        make_fine_tuning_data(finetune_train_path, output_path1_2, endpoints, smiles_col=smiles_col, use_stereo=True)
+        make_fine_tuning_data(finetune_train_path, output_path2, endpoints, smiles_col=smiles_col, use_stereo=True)
         
 
     data_path1_1 = processed_data
     data_path1_2 = output_path1_2
     data_path2 = output_path2
 
-    train_graphs1_1, val_graphs1_1, test_graphs1_1 = split_dataset(
+    split_ratio = [0.7, 0.2, 0.1] if finetune_test_path is None else [0.8, 0.2]
+
+    train_graphs1_1, val_graphs1_1, _ = split_dataset(
         path=data_path1_1,
-        split_ratio=[0.7, 0.2, 0.1],
+        split_ratio=split_ratio,
         seed=split_seed
     )
     train_graphs1_2, val_graphs1_2, test_graphs1_2 = split_dataset(
             path=data_path1_2,
-            split_ratio=[0.7, 0.2, 0.1],
+            split_ratio=split_ratio,
             seed=split_seed
         )
     train_graphs2, val_graphs2, test_graphs2 = split_dataset(
             path=data_path2,
-            split_ratio=[0.7, 0.2, 0.1],
+            split_ratio=split_ratio,
             seed=split_seed
         )
     
@@ -70,7 +73,7 @@ def run_experiment(cfg, processed_data, finetune_data, experiment_name,
             raise ValueError("두 조건의 분할 인덱스가 다릅니다.")
 
 
-    # 모델 2가지 생성
+    # 모델 저장 directory
     save_dir1_1 = ROOT + f"experiment/ex02/output/{experiment_name}/checkpoint1_1"
     save_dir1_2 = ROOT + f"experiment/ex02/output/{experiment_name}/checkpoint1_2"
     save_dir2 = ROOT + f"experiment/ex02/output/{experiment_name}/checkpoint2"
@@ -124,7 +127,6 @@ def run_experiment(cfg, processed_data, finetune_data, experiment_name,
     checkpoint1 = select_best_model(last_model_path1, save_dir1_2)
     checkpoint2 = select_best_model(last_model_path2, save_dir2)
 
-
     # 모델 2가지 평가
     output_dir = ROOT + f"experiment/ex02/output/{experiment_name}/" 
 
@@ -149,11 +151,14 @@ def make_pretrain_dataset(in_path, out_path):
         print('이미 데이터셋이 있음')
 
 
-def main(train_seed, experiment_name):
+def main(train_seed, experiment_name, endpoint_names):
+    finetune_train_path = DATAPATHS[endpoint_names[0]]['train'] # 아직 단일 학습만 지원
+    finetune_test_path = DATAPATHS[endpoint_names[0]].get('test', None)
+
     pretrain_data = ROOT + "dataset/raw/smiles/Compound_000000001_000500000.sdf"
     processed_data = ROOT + "/dataset/processed_data/processed_smiles/" + pretrain_data.split('/')[-1][:-4]
-    finetune_path = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
-    endpoint_names = ["PPBR_AZ"]
+    # finetune_path = ROOT + "dataset/raw/admet/PPBR_AZ.csv"
+
     endpoints = endpoints = {
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
@@ -174,12 +179,15 @@ def main(train_seed, experiment_name):
         }
 
     BASE_CONFIG["pooling"] = global_mean_pool
+    BASE_CONFIG["hidden_dim"] = 128
+    BASE_CONFIG["admet_hidden_dim"] = 64
     make_pretrain_dataset(pretrain_data, processed_data)
 
     run_experiment(
         BASE_CONFIG,
         processed_data,
-        finetune_path, 
+        finetune_train_path=finetune_train_path, 
+        finetune_test_path=finetune_test_path, 
         experiment_name=experiment_name+f'_{train_seed}seed', 
         endpoints=endpoints, 
         fine_epochs=100,
@@ -190,7 +198,4 @@ def main(train_seed, experiment_name):
 
 if __name__ == "__main__":
     """사전학습 유무 차이보는 실험"""
-    train_seed = 42
-    experiment_name = f'PPBR_AZ_{train_seed}seed_re'
-
-    main(42, 'PPBR_AZ_re')
+    main(42, 'PPBR_AZ_re', ["ExpansionRx_HLM"])

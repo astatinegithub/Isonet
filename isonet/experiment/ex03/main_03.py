@@ -53,7 +53,7 @@ if __name__ == "__main__":
     BASE_CONFIG = {
             "atom_dim": 72,        # atom feature 차원
             "bond_dim": 14,        # bond feature 차원
-            "hidden_dim": 512,
+            "hidden_dim": 128,
             "depth": 5,
             "drop_rate":0.3,
             "pooling":global_mean_pool,
@@ -62,15 +62,15 @@ if __name__ == "__main__":
             "encoder_use_cip": False,      # DMPNN에 원자 CIP를 전달할지
             # "use_stereo_attention": True,  # Attention을 사용할지
         }
-    experiment_name = 'pretrain_for_share_no_cip3'
+    experiment_name = 'pretrain_for_share_small_128_model_with_25seed'
 
-    pretrain_data = ROOT + "dataset/raw/smiles/Compound_001000001_001500000.sdf"
+    pretrain_data = ROOT + "dataset/raw/smiles/Compound_000000001_000500000_parts/part_001.sdf"
     run_experiment(
         BASE_CONFIG,
         pretrain_data,
         experiment_name,
-        train_seed=42,
+        train_seed=25,
         split_seed=25, 
-        epochs=50,
-        checkpoint_path=ROOT+'/experiment/ex03/output/pretrain_for_share_no_cip2/checkpoint1_1/ssl_checkpoint_200epoch.pt'
+        epochs=100,
+        # checkpoint_path=ROOT+'/experiment/ex03/output/pretrain_for_share_no_cip2/checkpoint1_1/ssl_checkpoint_200epoch.pt'
     )
