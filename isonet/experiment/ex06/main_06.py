@@ -4,7 +4,7 @@ from pathlib import Path
 from copy import deepcopy
 from torch_geometric.nn import global_mean_pool
 
-from isonet.config import ROOT, ALL_ENDPOINTS
+from isonet.config import ROOT, ALL_ENDPOINTS, DATAPATHS
 from isonet.data.dataset import split_dataset 
 from isonet.data.preprocess import make_fine_tuning_data
 from isonet.model.train.finetuning_learn import model_finetuning
@@ -76,10 +76,11 @@ def run_experiment(cfgs:list, origin_raw_data, experiment_name,
         )
 
 
-def main(train_seed, experiment_name):
-    origin_raw_data =  ROOT + "dataset/raw/admet/ExpansionRx_train.csv"
-    origin_test_path = ROOT + "dataset/raw/admet/ExpansionRx_test.csv"
-    endpoint_names = ["ExpansionRx_HLM"]
+def main(train_seed, experiment_name, endpoint_names):
+    origin_raw_data =  DATAPATHS[endpoint_names[0]]['train'] # 아직 단일 학습만 지원
+    origin_test_path = DATAPATHS[endpoint_names[0]].get('test', None)
+
+    # endpoint_names = ["ExpansionRx_HLM"]
     endpoints = endpoints = {
         name: deepcopy(ALL_ENDPOINTS[name])
         for name in endpoint_names
@@ -158,8 +159,9 @@ def main(train_seed, experiment_name):
 if __name__ == "__main__":
     """cip언제 어디에 넣는지 비교 실험"""
 
-    experiment_name = "ExpansionRx_HLM_cip_where_small_pretrianed"
+    experiment_name = "PPBR_AZ_cip_where_small_pretrianed"
+    endpoint_names = ['PPBR_AZ']
 
-    main(20, experiment_name)
-    main(25, experiment_name)
-    main(42, experiment_name)
+    main(20, experiment_name, endpoint_names)
+    main(25, experiment_name, endpoint_names)
+    main(42, experiment_name, endpoint_names)

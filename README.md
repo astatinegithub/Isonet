@@ -3,6 +3,7 @@
 ## 도입(Introduction)
 
 This project predicts ADMET properties from SMILES using a **Directed Message-Passing Neural Network (DMPNN)**.
+// 주의할점 : 아직 모델들 크기 최적화를 안해서 용량 차지가 심할 수 있음
 
 본 프로젝트는 SMILES로부터 분자 그래프를 구성하고, DMPNN을 이용하여 ADMET 물성을 예측하는 연구이다. 입체화학(stereochemistry) feature, 자기지도 사전학습, Stereo Attention이 예측 성능에 미치는 영향을 비교한다.
 
