@@ -13,13 +13,10 @@ class DMPNN(MessagePassing):
     def __init__(self, atom_dim, bond_dim, hidden_dim,
                  depth, W_bias=False): # bias 조절할 필요있음
         super().__init__()
-
         self.depth = depth
-
         self.W_i = nn.Linear(atom_dim + bond_dim, hidden_dim, bias=W_bias)
         self.W_m = nn.Linear(hidden_dim, hidden_dim, bias=W_bias)
         self.W_a = nn.Linear(atom_dim + hidden_dim, hidden_dim, bias=W_bias)
-
 
     def forward(self, data: MolGraph):
         x = data.x
@@ -55,12 +52,10 @@ class DMPNN(MessagePassing):
 
         return node_emb, edge_emb
     
-
     def message(self, h_j): # h_j 는 정해진 값임, x, h, y이런식으로 바뀌면 안됨
         h = self.W_m(h_j)
         h = torch.relu(h)
         return h
-    
 
     def update(self, aggr_out, h, rev_edge):
         # aggr_out: sum of incoming messages
@@ -80,9 +75,7 @@ class FeedForward(nn.Module):
         nn.Linear(in_dim, 4*in_dim),
         nn.ReLU(),
         nn.Dropout(drop_rate),
-        nn.Linear(4*in_dim, in_dim),
-        )
-        
+        nn.Linear(4*in_dim, in_dim),)
 
     def forward(self, x):
         return self.layers(x)
@@ -96,9 +89,7 @@ class TaskHead(nn.Module):
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
             nn.Dropout(drop_rate),
-            nn.Linear(hidden_dim, hidden_dim)
-        )
-
+            nn.Linear(hidden_dim, hidden_dim))
 
     def forward(self, x):
         x = self.net(x)
@@ -113,15 +104,12 @@ class SSLModel(nn.Module):
             cfg["atom_dim"],
             cfg["bond_dim"],
             cfg["hidden_dim"],
-            cfg["depth"]
-        )
-
+            cfg["depth"])
         self.atom_head = nn.Linear(cfg["hidden_dim"], cfg["atom_types"])
         self.bond_head = nn.Linear(cfg["hidden_dim"], cfg["bond_types"])
 
         self.encoder_use_cip = cfg.get("encoder_use_cip", True)
         self.cip_slice = slice(51, 56) # 이거 나중에 바꿔야할듯 -> 명시보다는 변수로 입력받아야함
-
 
     def forward(self, data: MolGraph):
         input_data = data

@@ -38,9 +38,8 @@ class IsonetModel(nn.Module):
                 bond_dim=cfg['bond_dim'],
                 attn_dim=cfg['attn_dim'],
                 dropout=cfg['attn_droprate'],
-                cip_start=51,                
-            )
-
+                cip_start=51,
+                mode=cfg.get("stereo_attention_mode", "learned"),)
 
     def forward(self, data: MolGraph):
         input_data = data
@@ -70,9 +69,12 @@ class StereoAttention(nn.Module):
         dropout=0.1,
         cip_start=51,
         kqv_bias=False,
+        mode="learned",
     ):
         super().__init__()
-
+        if mode not in ("learned", "uniform"):
+            raise ValueError(f"지원하지 않는 attention mode: {mode}")
+        self.mode = mode
         self.attn_dim = attn_dim
         self.cip_start = cip_start
 
@@ -96,7 +98,7 @@ class StereoAttention(nn.Module):
         # 보정값을 작게 반영하면서 학습을 시작한다.
         nn.init.zeros_(self.gate.weight)
         nn.init.constant_(self.gate.bias, -2.0)
-
+        
 
     def forward(self, h: Tensor, data: MolGraph):
         """
@@ -147,7 +149,12 @@ class StereoAttention(nn.Module):
         attn_score = attn_score / self.attn_dim**0.5
 
         # 중심별 이웃끼리만 softmax
-        alpha = softmax(attn_score, index=group, num_nodes=num_centers,)
+        # alpha = softmax(attn_score, index=group, num_nodes=num_centers,)
+        if self.mode == "uniform":
+            counts = torch.bincount(group, minlength=num_centers)
+            alpha = counts[group].to(dtype=attn_score.dtype).reciprocal()
+        else:
+            alpha = softmax(attn_score, index=group, num_nodes=num_centers)
 
         # 중심별 이웃 정보의 가중합
         messages = alpha.unsqueeze(-1) * v

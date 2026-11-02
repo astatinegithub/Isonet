@@ -106,38 +106,50 @@ def main(train_seed, experiment_name, endpoint_names):
     BASE_CONFIG['admet_hidden_dim'] = 64
     BASE_CONFIG['hidden_dim'] = 128
 
-    # 1. base 
-    cfg1 = BASE_CONFIG.copy()
-    cfg1['encoder_use_cip'] = False
+    # # 1. base 
+    # cfg1 = BASE_CONFIG.copy()
+    # cfg1['encoder_use_cip'] = False
 
-    cfg1['use_stereo_attention'] = False
-
-
-    # 2. base + 인코더 CIP
-    cfg2 = BASE_CONFIG.copy()
-    cfg2['encoder_use_cip'] = True
-
-    cfg2['use_stereo_attention'] = False
+    # cfg1['use_stereo_attention'] = False
 
 
-    # 3. Stereo Attention
-    cfg3 = BASE_CONFIG.copy()
-    cfg3['encoder_use_cip'] = False
+    # # 2. base + 인코더 CIP
+    # cfg2 = BASE_CONFIG.copy()
+    # cfg2['encoder_use_cip'] = True
 
-    cfg3['use_stereo_attention'] = True
-    cfg3['attn_dim'] = 32
-    cfg3['attn_droprate'] = 0.2
+    # cfg2['use_stereo_attention'] = False
 
 
-    # 4. 인코더 CIP+ Stereo Attention
-    cfg4 = BASE_CONFIG.copy()
-    cfg4['encoder_use_cip'] = True
+    # # 3. Stereo Attention
+    # cfg3 = BASE_CONFIG.copy()
+    # cfg3['encoder_use_cip'] = False
 
-    cfg4['use_stereo_attention'] = True
-    cfg4['attn_dim'] = 32
-    cfg4['attn_droprate'] = 0.2
+    # cfg3['use_stereo_attention'] = True
+    # cfg3['attn_dim'] = 32
+    # cfg3['attn_droprate'] = 0.2
 
-    cfgs = [cfg1, cfg2, cfg3, cfg4]
+
+    # # 4. 인코더 CIP+ Stereo Attention
+    # cfg4 = BASE_CONFIG.copy()
+    # cfg4['encoder_use_cip'] = True
+
+    # cfg4['use_stereo_attention'] = True
+    # cfg4['attn_dim'] = 32
+    # cfg4['attn_droprate'] = 0.2
+
+    # cfgs = [cfg1, cfg2, cfg3, cfg4]
+    cfg_uniform = BASE_CONFIG.copy()
+    cfg_uniform.update({
+        "encoder_use_cip": True,
+        "use_stereo_attention": True,
+        "encode_grad_off": False,
+        "attn_dim": 32,
+        "attn_droprate": 0.2,
+        "stereo_attention_mode": "uniform",
+        "pretrain_component": ["encoder"],
+    })
+
+    cfgs = [cfg_uniform]
 
 
     run_experiment(
@@ -159,9 +171,15 @@ def main(train_seed, experiment_name, endpoint_names):
 if __name__ == "__main__":
     """cip언제 어디에 넣는지 비교 실험"""
 
-    experiment_name = "PPBR_AZ_cip_where_small_pretrianed"
-    endpoint_names = ['PPBR_AZ']
+    # experiment_name = "PPBR_AZ_cip_where_small_pretrianed"
+    # endpoint_names = ['PPBR_AZ']
 
-    main(20, experiment_name, endpoint_names)
-    main(25, experiment_name, endpoint_names)
-    main(42, experiment_name, endpoint_names)
+    # main(20, experiment_name, endpoint_names)
+    # main(25, experiment_name, endpoint_names)
+    # main(42, experiment_name, endpoint_names)
+    for endpoint in ("ExpansionRx_HLM", "PPBR_AZ"):
+        experiment_name = f"{endpoint}_small_pretrained_uniform"
+
+        for seed in (20, 25, 42):
+            main(seed, experiment_name, [endpoint])
+
