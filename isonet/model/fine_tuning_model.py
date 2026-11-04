@@ -22,6 +22,7 @@ class IsonetModel(nn.Module):
         )
         self.use_stereo_attention = cfg.get("use_stereo_attention", False)
         self.encoder_use_cip = cfg.get("encoder_use_cip", True)
+        self.encoder_use_ez = cfg.get("encoder_use_ez", True)
         self.cip_slice = slice(51, 56) # 이거 나중에 바꿔야할듯 -> 명시보다는 변수로 입력받아야함
         self.pool = cfg.get('pooling', global_add_pool) # 임시pooling 방식
         self.heads = nn.ModuleDict({
@@ -39,15 +40,21 @@ class IsonetModel(nn.Module):
                 attn_dim=cfg['attn_dim'],
                 dropout=cfg['attn_droprate'],
                 cip_start=51,
-                mode=cfg.get("stereo_attention_mode", "learned"),)
+                mode=cfg.get("stereo_attention_mode", "learned"),
+                include_ez=cfg.get("include_ez_attention", False),)
 
     def forward(self, data: MolGraph):
         input_data = data
-        if not self.encoder_use_cip:
+        if not self.encoder_use_cip or not self.encoder_use_ez:
             input_data = copy(data)
-            input_data.x = data.x.clone()
-            input_data.x[:, self.cip_slice] = 0
 
+            if not self.encoder_use_cip:
+                input_data.x = data.x.clone()
+                input_data.x[:, self.cip_slice] = 0
+
+            if not self.encoder_use_ez:
+                input_data.edge_attr = data.edge_attr.clone()
+                input_data.edge_attr[:, 7:14] = 0
         h, _ = self.encoder(input_data)
 
         if self.use_stereo_attention:
@@ -70,6 +77,7 @@ class StereoAttention(nn.Module):
         cip_start=51,
         kqv_bias=False,
         mode="learned",
+        include_ez=False,
     ):
         super().__init__()
         if mode not in ("learned", "uniform"):
@@ -77,6 +85,7 @@ class StereoAttention(nn.Module):
         self.mode = mode
         self.attn_dim = attn_dim
         self.cip_start = cip_start
+        self.include_ez = include_ez
 
         # Attention 경로에만 적용.
         # 기존 residual 경로의 h는 그대로 유지한다.
@@ -112,6 +121,20 @@ class StereoAttention(nn.Module):
 
         # R/S/r/s 중 하나가 지정된 원자만 선택
         center_mask = cip.sum(dim=-1) > 0
+        if self.include_ez:
+            # 현재 14차원 bond feature 기준
+            is_double = data.edge_attr[:, 2] > 0.5
+
+            # E/Z 및 CIS/TRANS가 명시된 결합
+            has_defined_stereo = (
+                data.edge_attr[:, 9:13].sum(dim=-1) > 0
+            )
+
+            selected_bonds = is_double & has_defined_stereo
+            endpoints = data.edge_index[:, selected_bonds].reshape(-1)
+
+            center_mask = center_mask.clone()
+            center_mask[endpoints] = True
         _, dst = data.edge_index
 
         # 이웃 src -> 입체중심 dst인 방향만 사용
