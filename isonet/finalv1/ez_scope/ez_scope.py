@@ -59,6 +59,7 @@ def main(train_seed, experiment_name, endpoint_names, pretrained=False):
         origin_raw_data=origin_raw_data,
         experiment_name=experiment_name + f"_{train_seed}seed",
         endpoints=endpoints,
+        dir_name="ez_scope",
         smiles_col=endpoints[endpoint_names[0]]["smiles_col"],
         epochs=100,
         save_freq=20,
